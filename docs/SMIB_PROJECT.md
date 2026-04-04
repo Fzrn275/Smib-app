@@ -1,4 +1,4 @@
-# CLAUDE.md — S-MIB Project Master Prompt
+# SMIB_PROJECT.md — S-MIB Project Master Prompt
 # Sarawak Maker-In-A-Box (S-MIB) Mobile App
 # CSS3133 Object Oriented Programming | Firestarter Group
 
@@ -168,7 +168,7 @@ smib-app/
 ├── .env                         ← Supabase URL and key — NEVER commit this
 ├── .gitignore                   ← Must include .env
 ├── README.md
-└── CLAUDE.md                    ← This file
+└── SMIB_PROJECT.md                    ← This file
 ```
 
 ---
@@ -434,7 +434,7 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 ```
 5. Add `.env` to `.gitignore` — never commit this file
 
-### Place CLAUDE.md in project root
+### Place SMIB_PROJECT.md in project root
 Copy this file into the `smib-app/` folder. Claude Code reads it automatically.
 
 ### Install Expo Go on your phone
@@ -520,7 +520,7 @@ You need to explain the design decisions, not just show the code. Key points:
 
 ## 13. REFERENCE FILES
 
-Upload these alongside CLAUDE.md when starting a Claude Code session:
+Upload these alongside SMIB_PROJECT.md when starting a Claude Code session:
 
 - `smib-app.html` — Original S-MIB HTML prototype from Design Thinking assignment.
   Use as **visual reference only** for what screens should look like.
@@ -630,5 +630,5 @@ Always follow these rules when helping me:
 - If something can go wrong, warn me before I do it
 ```
 
-This works together with CLAUDE.md — the custom instruction controls HOW Claude Code
-talks to you, and CLAUDE.md contains WHAT the project is about.
+This works together with SMIB_PROJECT.md — the custom instruction controls HOW Claude Code
+talks to you, and SMIB_PROJECT.md contains WHAT the project is about.

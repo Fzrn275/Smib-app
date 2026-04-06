@@ -1,130 +1,89 @@
 // ============================================================
 // FILE: src/theme.js
 // PURPOSE: Central design system for S-MIB app.
-//          All colours, shadows, glass card styles, and
-//          typography live here. Every screen imports from
-//          this file so the whole app stays consistent.
+//          Colours, spacing, radius, and typography live here.
 //
-// VIBE: Web3 / Decentralized Web aesthetic
-//       - Dark base backgrounds
-//       - Sarawak gold (#FFD700) as the glow accent
-//       - Glassmorphism cards (semi-transparent + gold border)
-//       - Glow shadows on interactive elements
+// REFERENCE: docs/SMIB_Mockup.html (Version B — Student Friendly)
+//            docs/smib_original_mockup.html (Sarawak palette)
+//
+// VIBE: Sarawak cultural identity + Web3-level interactiveness
+//   - Light #f0f4f8 background with white cards
+//   - Sarawak yellow for XP, badges, achievements
+//   - Teal as the primary interactive colour
+//   - Sarawak red + dark header on key sections
 // ============================================================
 
 // ----------------------------------------------------------
 // COLOURS
 // ----------------------------------------------------------
 export const Colors = {
-  // Base backgrounds
-  background:   '#0D0D0D',   // Main screen background (deep dark)
-  surface:      '#1A1A1A',   // Card / bottom nav background
-  surfaceLight: '#242424',   // Slightly lighter surface (input bg, etc.)
+  // Screen background
+  background:   '#f0f4f8',   // Light blue-grey (all screens)
+  card:         '#ffffff',   // White card surface
+  cardShadow:   'rgba(0, 0, 0, 0.08)',
 
   // Sarawak identity
-  gold:         '#FFD700',   // Primary accent — Sarawak gold
-  goldDim:      'rgba(255, 215, 0, 0.12)',  // Subtle gold tint (active tab bg)
-  goldGlow:     'rgba(255, 215, 0, 0.35)',  // Gold glow for shadows
-  goldBorder:   'rgba(255, 215, 0, 0.25)',  // Gold border on glass cards
-  red:          '#D4411F',   // Secondary accent — Sarawak red
+  gold:         '#F4C430',   // Sarawak yellow — XP bars, badges, level pills
+  red:          '#CC2529',   // Sarawak red — branding, secondary accents
+  dark:         '#1a1a2e',   // Sarawak black — header gradient base, logo bg
+  darkAlt:      '#16213e',   // Header gradient end colour
 
-  // Text
-  textPrimary:   '#FFFFFF',
-  textSecondary: '#AAAAAA',
-  textMuted:     '#555555',
+  // Primary interactive (teal)
+  teal:         '#0ea5e9',
+  tealLight:    '#e0f2fe',
 
   // Status colours
-  success: '#43A047',
-  warning: '#FF6F00',
-  info:    '#2196F3',
+  success:      '#22c55e',
+  successLight: '#dcfce7',
+  warning:      '#f97316',
+  warningLight: '#ffedd5',
+  info:         '#8b5cf6',
+  infoLight:    '#ede9fe',
 
-  // Difficulty colours (match mockup)
-  beginner:     '#43A047',
-  intermediate: '#FF6F00',
-  advanced:     '#D4411F',
+  // Text
+  textPrimary:  '#1e293b',
+  textMuted:    '#64748b',
 
-  // Transparent overlays
-  overlay: 'rgba(0, 0, 0, 0.6)',
+  // Borders / dividers
+  border:       '#e2e8f0',
 };
 
 // ----------------------------------------------------------
-// GLOW SHADOWS
-// Used on buttons, active cards, highlighted elements.
-// Creates the Web3 "neon glow" effect with Sarawak gold.
+// SHADOWS
+// Consistent card elevation across all screens.
 // ----------------------------------------------------------
-export const Glow = {
-  gold: {
-    shadowColor:   '#FFD700',
-    shadowOffset:  { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius:  14,
-    elevation:     10,          // Android fallback
-  },
-  red: {
-    shadowColor:   '#D4411F',
-    shadowOffset:  { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius:  10,
-    elevation:     8,
-  },
-  subtle: {
-    shadowColor:   '#FFD700',
-    shadowOffset:  { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius:  6,
+export const Shadow = {
+  card: {
+    shadowColor:   '#000000',
+    shadowOffset:  { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius:  12,
     elevation:     4,
   },
-};
-
-// ----------------------------------------------------------
-// GLASSMORPHISM CARD STYLE
-// Semi-transparent dark surface + gold border.
-// This is the main card style used across all screens.
-// ----------------------------------------------------------
-export const Glass = {
-  card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderWidth:     1,
-    borderColor:     'rgba(255, 215, 0, 0.2)',
-    borderRadius:    16,
-    padding:         16,
+  strong: {
+    shadowColor:   '#000000',
+    shadowOffset:  { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius:  20,
+    elevation:     8,
   },
-  cardActive: {
-    backgroundColor: 'rgba(255, 215, 0, 0.07)',
-    borderWidth:     1,
-    borderColor:     'rgba(255, 215, 0, 0.5)',
-    borderRadius:    16,
-    padding:         16,
-  },
-};
-
-// ----------------------------------------------------------
-// GRADIENT CONFIGS
-// Used with expo-linear-gradient (or as reference for colours).
-// ----------------------------------------------------------
-export const Gradients = {
-  goldToRed:   ['#FFD700', '#D4411F'],
-  darkToGold:  ['#0D0D0D', '#1A1200'],
-  splash:      ['#0D0D0D', '#1A0D00', '#2A1500'],
 };
 
 // ----------------------------------------------------------
 // TYPOGRAPHY
-// Consistent font sizes and weights across all screens.
 // ----------------------------------------------------------
 export const Typography = {
-  hero:    { fontSize: 32, fontWeight: '900', color: Colors.textPrimary },
+  hero:    { fontSize: 28, fontWeight: '900', color: Colors.textPrimary },
   title:   { fontSize: 22, fontWeight: '800', color: Colors.textPrimary },
-  heading: { fontSize: 18, fontWeight: '700', color: Colors.textPrimary },
-  subhead: { fontSize: 15, fontWeight: '600', color: Colors.textSecondary },
-  body:    { fontSize: 14, fontWeight: '400', color: Colors.textSecondary },
-  caption: { fontSize: 12, fontWeight: '600', color: Colors.textMuted },
-  label:   { fontSize: 11, fontWeight: '700', color: Colors.textMuted, letterSpacing: 1 },
+  heading: { fontSize: 16, fontWeight: '800', color: Colors.textPrimary },
+  subhead: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary },
+  body:    { fontSize: 13, fontWeight: '400', color: Colors.textMuted },
+  caption: { fontSize: 11, fontWeight: '600', color: Colors.textMuted },
+  label:   { fontSize: 10, fontWeight: '700', color: Colors.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' },
 };
 
 // ----------------------------------------------------------
 // SPACING
-// Consistent spacing scale used for padding/margin.
 // ----------------------------------------------------------
 export const Spacing = {
   xs:  4,

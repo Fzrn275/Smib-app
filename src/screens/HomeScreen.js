@@ -1,227 +1,268 @@
 // ============================================================
 // FILE: src/screens/HomeScreen.js
 // PURPOSE: Main landing screen of S-MIB.
-//          Shows a welcome banner, project cards with a
-//          Web3 / dark glassmorphism aesthetic.
 //
-// STYLE: Dark base + Sarawak gold glow + glass cards
+// REFERENCE: docs/SMIB_Mockup.html — Version B (Student Friendly)
+// LAYOUT:
+//   - Dark gradient header with greeting, level badge, XP bar
+//   - Stats grid (3 boxes) overlapping the header
+//   - "My Projects" section with project cards
+//   - Each card: coloured emoji box + title/subtitle/progress + difficulty pill
 // ============================================================
 
-import { useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, Radius } from '../theme';
+import { Colors, Spacing, Radius, Shadow } from '../theme';
 
 // ----------------------------------------------------------
-// STATIC DATA — projects shown on home screen
-// (Will be replaced with Supabase data later)
+// STATIC DATA — placeholder until Supabase is connected
 // ----------------------------------------------------------
+const USER = {
+  name:     'Fazrin',
+  level:    4,
+  xp:       620,
+  xpMax:    1000,
+  active:   3,
+  done:     7,
+  badges:   12,
+};
+
 const PROJECTS = [
   {
-    id:         'led-torch',
-    emoji:      '💡',
-    title:      'Lampu Suluh LED',
-    subtitle:   'LED Torch from Old Batteries',
-    difficulty: 'Beginner',
-    diffColor:  Colors.success,
-    time:       '30 min',
-    points:     100,
+    id:         'solar-charger',
+    emoji:      '⚡',
+    emojiColor: Colors.tealLight,
+    title:      'Solar Phone Charger',
+    subtitle:   'Electronics • 3 of 6 steps done',
+    progress:   0.5,
+    barColor:   Colors.teal,
+    difficulty: 'Easy',
+    diffStyle:  'easy',
+    // Detail screen data
     category:   'Electronics',
+    duration:   'About 2 hours',
+    tags:       ['Step-by-step', '♻️ Recycled'],
+    steps: [
+      { id: 1, title: 'Gather materials',    status: 'done'     },
+      { id: 2, title: 'Connect solar panel', status: 'done'     },
+      { id: 3, title: 'Wire the circuit',    status: 'done'     },
+      { id: 4, title: 'Add USB port',        status: 'current'  },
+      { id: 5, title: 'Test the charger',    status: 'upcoming' },
+      { id: 6, title: 'Final assembly',      status: 'upcoming' },
+    ],
   },
   {
-    id:         'motor-generator',
-    emoji:      '⚙️',
-    title:      'Penjana Motor DC',
-    subtitle:   'DC Motor Generator',
-    difficulty: 'Intermediate',
-    diffColor:  Colors.warning,
-    time:       '2 jam',
-    points:     200,
-    category:   'Mechanics',
+    id:         'water-sensor',
+    emoji:      '🌱',
+    emojiColor: Colors.successLight,
+    title:      'Smart Water Sensor',
+    subtitle:   'Agriculture • 8 of 10 steps done',
+    progress:   0.8,
+    barColor:   Colors.success,
+    difficulty: 'Medium',
+    diffStyle:  'medium',
+    category:   'Agriculture',
+    duration:   'About 3 hours',
+    tags:       ['Step-by-step', '🌊 Water'],
+    steps: [
+      { id: 1,  title: 'Gather components',      status: 'done'     },
+      { id: 2,  title: 'Set up Arduino',          status: 'done'     },
+      { id: 3,  title: 'Wire the sensor',         status: 'done'     },
+      { id: 4,  title: 'Write sensor code',       status: 'done'     },
+      { id: 5,  title: 'Test sensor readings',    status: 'done'     },
+      { id: 6,  title: 'Build waterproof casing', status: 'done'     },
+      { id: 7,  title: 'Mount in field position', status: 'done'     },
+      { id: 8,  title: 'Calibrate sensor',        status: 'done'     },
+      { id: 9,  title: 'Connect to data logger',  status: 'current'  },
+      { id: 10, title: 'Final field test',        status: 'upcoming' },
+    ],
   },
   {
-    id:         'solar-panel',
-    emoji:      '☀️',
-    title:      'Panel Solar DIY',
-    subtitle:   'DIY Solar Panel from Old CDs',
-    difficulty: 'Advanced',
-    diffColor:  Colors.red,
-    time:       '4 jam',
-    points:     350,
-    category:   'Solar',
-  },
-  {
-    id:         'mini-fan',
-    emoji:      '🌀',
-    title:      'Kipas Mini DIY',
-    subtitle:   'DIY Mini Fan from Old Motor',
-    difficulty: 'Intermediate',
-    diffColor:  Colors.warning,
-    time:       '1 jam',
-    points:     150,
-    category:   'Mechanics',
+    id:         'wind-turbine',
+    emoji:      '♻️',
+    emojiColor: Colors.warningLight,
+    title:      'Recycled Wind Turbine',
+    subtitle:   'Renewable Energy • Not started',
+    progress:   0,
+    barColor:   Colors.warning,
+    difficulty: 'Easy',
+    diffStyle:  'easy',
+    category:   'Renewable Energy',
+    duration:   'About 4 hours',
+    tags:       ['Step-by-step', '♻️ Recycled'],
+    steps: [
+      { id: 1, title: 'Collect recycled materials', status: 'current'  },
+      { id: 2, title: 'Cut turbine blades',          status: 'upcoming' },
+      { id: 3, title: 'Assemble rotor',              status: 'upcoming' },
+      { id: 4, title: 'Attach motor/generator',      status: 'upcoming' },
+      { id: 5, title: 'Build the tower',             status: 'upcoming' },
+      { id: 6, title: 'Test power output',           status: 'upcoming' },
+    ],
   },
 ];
 
 // ----------------------------------------------------------
-// FILTER TABS
+// COMPONENT: DIFFICULTY PILL
 // ----------------------------------------------------------
-const FILTERS = ['Semua', 'Electronics', 'Mechanics', 'Solar'];
+function DiffPill({ style: diffStyle, label }) {
+  const s = diffStyle === 'easy'
+    ? { bg: Colors.successLight, text: Colors.success }
+    : { bg: Colors.warningLight, text: Colors.warning };
 
-// ----------------------------------------------------------
-// COMPONENT: DIFFICULTY BADGE
-// ----------------------------------------------------------
-function DiffBadge({ label, color }) {
   return (
-    <View style={[styles.diffBadge, { backgroundColor: color + '22', borderColor: color + '66' }]}>
-      <Text style={[styles.diffText, { color }]}>{label.toUpperCase()}</Text>
+    <View style={[styles.diffPill, { backgroundColor: s.bg }]}>
+      <Text style={[styles.diffText, { color: s.text }]}>{label}</Text>
     </View>
   );
 }
 
 // ----------------------------------------------------------
-// COMPONENT: PROJECT CARD (glass style)
+// COMPONENT: PROJECT CARD
 // ----------------------------------------------------------
 function ProjectCard({ project, onPress }) {
+  // Scale down on press — Web3-style press feedback
+  const scale = new Animated.Value(1);
+
+  const onPressIn = () =>
+    Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 30 }).start();
+  const onPressOut = () =>
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }).start();
+
   return (
     <TouchableOpacity
-      style={styles.card}
       onPress={onPress}
-      activeOpacity={0.75}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      activeOpacity={1}
     >
-      {/* Gold left accent bar */}
-      <View style={styles.cardAccent} />
+      <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
 
-      {/* Emoji hero */}
-      <View style={styles.cardEmoji}>
-        <Text style={styles.emojiText}>{project.emoji}</Text>
-      </View>
+        {/* Emoji icon box */}
+        <View style={[styles.emojiBox, { backgroundColor: project.emojiColor }]}>
+          <Text style={styles.emojiText}>{project.emoji}</Text>
+        </View>
 
-      {/* Content */}
-      <View style={styles.cardContent}>
-        <View style={styles.cardTop}>
+        {/* Card body */}
+        <View style={styles.cardBody}>
           <Text style={styles.cardTitle} numberOfLines={1}>{project.title}</Text>
-          <DiffBadge label={project.difficulty} color={project.diffColor} />
-        </View>
-        <Text style={styles.cardSubtitle} numberOfLines={1}>{project.subtitle}</Text>
+          <Text style={styles.cardSubtitle} numberOfLines={1}>{project.subtitle}</Text>
 
-        {/* Meta row */}
-        <View style={styles.cardMeta}>
-          <View style={styles.metaItem}>
-            <Ionicons name="time-outline" size={13} color={Colors.textMuted} />
-            <Text style={styles.metaText}>{project.time}</Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Ionicons name="star-outline" size={13} color={Colors.gold} />
-            <Text style={[styles.metaText, { color: Colors.gold }]}>{project.points} XP</Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Ionicons name="pricetag-outline" size={13} color={Colors.textMuted} />
-            <Text style={styles.metaText}>{project.category}</Text>
-          </View>
+          {/* Mini progress bar */}
+          {project.progress > 0 && (
+            <View style={styles.miniBar}>
+              <View style={[
+                styles.miniBarFill,
+                { width: `${project.progress * 100}%`, backgroundColor: project.barColor }
+              ]} />
+            </View>
+          )}
         </View>
-      </View>
 
-      {/* Chevron */}
-      <Ionicons name="chevron-forward" size={18} color={Colors.gold} style={styles.chevron} />
+        {/* Difficulty pill */}
+        <DiffPill style={project.diffStyle} label={project.difficulty} />
+
+      </Animated.View>
     </TouchableOpacity>
+  );
+}
+
+// ----------------------------------------------------------
+// COMPONENT: STAT BOX
+// ----------------------------------------------------------
+function StatBox({ value, label, valueColor }) {
+  return (
+    <View style={styles.statBox}>
+      <Text style={[styles.statNum, { color: valueColor }]}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
   );
 }
 
 // ----------------------------------------------------------
 // MAIN SCREEN
 // ----------------------------------------------------------
-export default function HomeScreen() {
-  // Active filter state
-  const [activeFilter, setActiveFilter] = useState('Semua');
-
-  // Filtered project list
-  const filtered = activeFilter === 'Semua'
-    ? PROJECTS
-    : PROJECTS.filter(p => p.category === activeFilter);
+export default function HomeScreen({ navigation }) {
+  const xpPercent = USER.xp / USER.xpMax;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
 
-        {/* ── HEADER ─────────────────────────────────────── */}
+        {/* ── DARK HEADER ──────────────────────────────────── */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.headerLabel}>SARAWAK MAKER-IN-A-BOX</Text>
-            <Text style={styles.headerTitle}>S-MIB</Text>
-          </View>
-          {/* Gold glow dot — online indicator */}
-          <View style={styles.onlineDot} />
-        </View>
 
-        {/* ── WELCOME BANNER ─────────────────────────────── */}
-        <View style={styles.banner}>
-          {/* Glow blobs for Web3 depth effect */}
-          <View style={styles.bannerGlowGold} />
-          <View style={styles.bannerGlowRed} />
+          {/* Decorative circles (depth effect like mockup) */}
+          <View style={styles.decCircleTop} />
+          <View style={styles.decCircleBottom} />
 
-          <Text style={styles.bannerGreeting}>Selamat Datang 👋</Text>
-          <Text style={styles.bannerTitle}>Bina sesuatu{'\n'}yang hebat hari ini.</Text>
-          <Text style={styles.bannerSub}>Belajar  •  Bina  •  Berjaya</Text>
-
-          {/* Stat pills */}
-          <View style={styles.bannerStats}>
-            <View style={styles.statPill}>
-              <Ionicons name="cube-outline" size={14} color={Colors.gold} />
-              <Text style={styles.statText}>4 Projek</Text>
-            </View>
-            <View style={styles.statPill}>
-              <Ionicons name="wifi-outline" size={14} color={Colors.success} />
-              <Text style={[styles.statText, { color: Colors.success }]}>Offline Ready</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* ── SECTION TITLE ──────────────────────────────── */}
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Semua Projek</Text>
-          <Text style={styles.sectionCount}>{filtered.length} projek</Text>
-        </View>
-
-        {/* ── FILTER TABS ────────────────────────────────── */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterScroll}
-          contentContainerStyle={styles.filterContent}
-        >
-          {FILTERS.map(f => (
-            <TouchableOpacity
-              key={f}
-              style={[styles.filterTab, activeFilter === f && styles.filterTabActive]}
-              onPress={() => setActiveFilter(f)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.filterLabel, activeFilter === f && styles.filterLabelActive]}>
-                {f}
+          {/* Logo row */}
+          <View style={styles.headerTop}>
+            <View style={styles.logoRow}>
+              <View style={styles.logoIcon}>
+                <Text style={styles.logoEmoji}>🦅</Text>
+              </View>
+              <Text style={styles.logoName}>
+                S-<Text style={styles.logoAccent}>MIB</Text>
               </Text>
+            </View>
+            <TouchableOpacity style={styles.notifBtn} activeOpacity={0.7}>
+              <Ionicons name="notifications-outline" size={20} color="#fff" />
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+          </View>
 
-        {/* ── PROJECT CARDS ──────────────────────────────── */}
+          {/* Greeting */}
+          <Text style={styles.greetingSub}>Good morning,</Text>
+          <Text style={styles.greetingName}>
+            {USER.name} <Text>👋</Text>
+          </Text>
+
+          {/* Level badge + XP */}
+          <View style={styles.levelRow}>
+            <View style={styles.levelBadge}>
+              <Text style={styles.levelText}>LEVEL {USER.level}</Text>
+            </View>
+            <Text style={styles.xpText}>{USER.xp} / {USER.xpMax} XP</Text>
+          </View>
+
+          {/* XP progress bar */}
+          <View style={styles.xpBarOuter}>
+            <View style={[styles.xpBarInner, { width: `${xpPercent * 100}%` }]} />
+          </View>
+
+        </View>
+
+        {/* ── STATS GRID (overlaps header) ─────────────────── */}
+        <View style={styles.statsGrid}>
+          <StatBox value={USER.active}  label="Active"  valueColor={Colors.teal}    />
+          <StatBox value={USER.done}    label="Done"    valueColor={Colors.success}  />
+          <StatBox value={USER.badges}  label="Badges"  valueColor={Colors.warning}  />
+        </View>
+
+        {/* ── PROJECTS SECTION ─────────────────────────────── */}
+        <View style={styles.sectionHead}>
+          <Text style={styles.sectionTitle}>My Projects 📋</Text>
+          <TouchableOpacity activeOpacity={0.7}>
+            <Text style={styles.seeAll}>See All →</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.cardList}>
-          {filtered.map(project => (
+          {PROJECTS.map(project => (
             <ProjectCard
               key={project.id}
               project={project}
-              onPress={() => {}}   // Will navigate to ProjectDetail later
+              onPress={() => navigation.navigate('ProjectDetail', { project })}
             />
           ))}
         </View>
@@ -241,136 +282,193 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
 
-  scroll: {
-    flex: 1,
-  },
-
   scrollContent: {
     paddingBottom: Spacing.xxl,
   },
 
-  // ── Header ────────────────────────────────────────────
+  // ── Header ─────────────────────────────────────────────
   header: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
+    backgroundColor: Colors.dark,
+    backgroundImage: undefined,
     paddingHorizontal: Spacing.md,
-    paddingTop:     Spacing.md,
-    paddingBottom:  Spacing.sm,
+    paddingTop:        Spacing.md,
+    paddingBottom:     Spacing.xxl,
+    borderBottomLeftRadius:  28,
+    borderBottomRightRadius: 28,
+    overflow: 'hidden',
+    // Simulate the linear gradient from mockup (#1a1a2e → #16213e)
+    // expo-linear-gradient would be ideal but keeping plain RN for now
+    backgroundColor: '#1a1a2e',
   },
 
-  headerLabel: {
-    fontSize:      10,
-    fontWeight:    '700',
-    color:         Colors.gold,
-    letterSpacing: 2,
-  },
-
-  headerTitle: {
-    fontSize:   28,
-    fontWeight: '900',
-    color:      Colors.textPrimary,
-  },
-
-  // Gold pulsing dot (online indicator)
-  onlineDot: {
-    width:           10,
-    height:          10,
-    borderRadius:    5,
-    backgroundColor: Colors.gold,
-    shadowColor:     Colors.gold,
-    shadowOffset:    { width: 0, height: 0 },
-    shadowOpacity:   0.9,
-    shadowRadius:    6,
-    elevation:       6,
-  },
-
-  // ── Welcome Banner ────────────────────────────────────
-  banner: {
-    margin:          Spacing.md,
-    borderRadius:    Radius.lg,
-    padding:         Spacing.lg,
-    backgroundColor: '#111111',
-    borderWidth:     1,
-    borderColor:     'rgba(255,215,0,0.2)',
-    overflow:        'hidden',
-  },
-
-  // Glow blob — gold (top left)
-  bannerGlowGold: {
+  // Decorative circles (depth effect)
+  decCircleTop: {
     position:        'absolute',
     top:             -40,
-    left:            -40,
+    right:           -40,
     width:           160,
     height:          160,
     borderRadius:    80,
-    backgroundColor: 'rgba(255,215,0,0.12)',
+    backgroundColor: 'rgba(244, 196, 48, 0.10)',  // gold tint
   },
-
-  // Glow blob — red (bottom right)
-  bannerGlowRed: {
+  decCircleBottom: {
     position:        'absolute',
-    bottom:          -50,
-    right:           -30,
+    bottom:          -60,
+    left:            -30,
     width:           140,
     height:          140,
     borderRadius:    70,
-    backgroundColor: 'rgba(212,65,31,0.12)',
+    backgroundColor: 'rgba(14, 165, 233, 0.08)',  // teal tint
   },
 
-  bannerGreeting: {
-    fontSize:   13,
-    fontWeight: '600',
-    color:      Colors.textSecondary,
-    marginBottom: 6,
+  headerTop: {
+    flexDirection:  'row',
+    justifyContent: 'space-between',
+    alignItems:     'center',
+    marginBottom:   Spacing.md,
+    position:       'relative',
+    zIndex:         1,
   },
 
-  bannerTitle: {
-    fontSize:     26,
-    fontWeight:   '900',
-    color:        Colors.textPrimary,
-    lineHeight:   32,
-    marginBottom: Spacing.sm,
-  },
-
-  bannerSub: {
-    fontSize:     12,
-    fontWeight:   '600',
-    color:        Colors.gold,
-    letterSpacing: 1,
-    marginBottom: Spacing.md,
-  },
-
-  bannerStats: {
+  logoRow: {
     flexDirection: 'row',
+    alignItems:    'center',
     gap:           Spacing.sm,
   },
 
-  statPill: {
-    flexDirection:   'row',
+  logoIcon: {
+    width:           38,
+    height:          38,
+    borderRadius:    Radius.md,
+    backgroundColor: Colors.gold,
     alignItems:      'center',
-    gap:             5,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth:     1,
-    borderColor:     'rgba(255,255,255,0.1)',
+    justifyContent:  'center',
+  },
+
+  logoEmoji: {
+    fontSize: 20,
+  },
+
+  logoName: {
+    fontSize:   18,
+    fontWeight: '700',
+    color:      '#ffffff',
+  },
+
+  logoAccent: {
+    color: Colors.gold,
+  },
+
+  notifBtn: {
+    width:           38,
+    height:          38,
+    borderRadius:    Radius.md,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+
+  greetingSub: {
+    fontSize:    13,
+    color:       'rgba(255,255,255,0.60)',
+    marginBottom: 2,
+    position:    'relative',
+    zIndex:      1,
+  },
+
+  greetingName: {
+    fontSize:     22,
+    fontWeight:   '800',
+    color:        '#ffffff',
+    marginBottom: Spacing.md,
+    position:     'relative',
+    zIndex:       1,
+  },
+
+  levelRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           Spacing.sm,
+    marginBottom:  Spacing.sm,
+    position:      'relative',
+    zIndex:        1,
+  },
+
+  levelBadge: {
+    backgroundColor: Colors.gold,
     borderRadius:    Radius.full,
-    paddingHorizontal: 12,
-    paddingVertical:   6,
+    paddingHorizontal: 10,
+    paddingVertical:    4,
   },
 
-  statText: {
-    fontSize:   12,
-    fontWeight: '600',
-    color:      Colors.textSecondary,
+  levelText: {
+    fontSize:   11,
+    fontWeight: '800',
+    color:      '#1a1a2e',
+    letterSpacing: 0.5,
   },
 
-  // ── Section header ────────────────────────────────────
-  sectionRow: {
+  xpText: {
+    fontSize: 12,
+    color:    'rgba(255,255,255,0.60)',
+  },
+
+  xpBarOuter: {
+    height:          8,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius:    Radius.full,
+    overflow:        'hidden',
+    position:        'relative',
+    zIndex:          1,
+  },
+
+  xpBarInner: {
+    height:          '100%',
+    backgroundColor: Colors.gold,
+    borderRadius:    Radius.full,
+    // Gold → orange gradient feel (approximated without expo-linear-gradient)
+  },
+
+  // ── Stats Grid ─────────────────────────────────────────
+  statsGrid: {
     flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
+    marginHorizontal: Spacing.md,
+    marginTop:      -22,       // Overlaps the header bottom
+    gap:            Spacing.sm,
+    marginBottom:   Spacing.md,
+    zIndex:         2,
+  },
+
+  statBox: {
+    flex:            1,
+    backgroundColor: Colors.card,
+    borderRadius:    Radius.lg,
+    paddingVertical: 12,
+    alignItems:      'center',
+    ...Shadow.card,
+  },
+
+  statNum: {
+    fontSize:   24,
+    fontWeight: '900',
+  },
+
+  statLabel: {
+    fontSize:   10,
+    fontWeight: '600',
+    color:      Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing:  0.5,
+    marginTop:  2,
+  },
+
+  // ── Section header ─────────────────────────────────────
+  sectionHead: {
+    flexDirection:     'row',
+    justifyContent:    'space-between',
+    alignItems:        'center',
     paddingHorizontal: Spacing.md,
-    marginBottom:   Spacing.sm,
+    marginBottom:      Spacing.sm,
   },
 
   sectionTitle: {
@@ -379,160 +477,81 @@ const styles = StyleSheet.create({
     color:      Colors.textPrimary,
   },
 
-  sectionCount: {
-    fontSize:   12,
-    fontWeight: '600',
-    color:      Colors.textMuted,
-  },
-
-  // ── Filter tabs ───────────────────────────────────────
-  filterScroll: {
-    marginBottom: Spacing.md,
-  },
-
-  filterContent: {
-    paddingHorizontal: Spacing.md,
-    gap:               Spacing.sm,
-  },
-
-  filterTab: {
-    paddingHorizontal: 16,
-    paddingVertical:   8,
-    borderRadius:      Radius.full,
-    borderWidth:       1,
-    borderColor:       'rgba(255,255,255,0.1)',
-    backgroundColor:   'rgba(255,255,255,0.04)',
-  },
-
-  filterTabActive: {
-    backgroundColor: Colors.goldDim,
-    borderColor:     Colors.gold,
-    shadowColor:     Colors.gold,
-    shadowOffset:    { width: 0, height: 0 },
-    shadowOpacity:   0.4,
-    shadowRadius:    8,
-    elevation:       4,
-  },
-
-  filterLabel: {
+  seeAll: {
     fontSize:   13,
-    fontWeight: '600',
-    color:      Colors.textMuted,
+    fontWeight: '700',
+    color:      Colors.teal,
   },
 
-  filterLabelActive: {
-    color: Colors.gold,
-  },
-
-  // ── Card list ─────────────────────────────────────────
+  // ── Card list ──────────────────────────────────────────
   cardList: {
     paddingHorizontal: Spacing.md,
     gap:               Spacing.sm,
   },
 
-  // ── Project Card ──────────────────────────────────────
+  // ── Project Card ───────────────────────────────────────
   card: {
     flexDirection:   'row',
     alignItems:      'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth:     1,
-    borderColor:     'rgba(255,215,0,0.15)',
-    borderRadius:    Radius.lg,
-    padding:         Spacing.md,
-    marginBottom:    2,
+    backgroundColor: Colors.card,
+    borderRadius:    18,
+    padding:         14,
+    gap:             Spacing.sm,
+    ...Shadow.card,
   },
 
-  // Vertical gold bar on left edge
-  cardAccent: {
-    width:           3,
-    height:          '100%',
-    backgroundColor: Colors.gold,
-    borderRadius:    2,
-    marginRight:     Spacing.md,
-    position:        'absolute',
-    left:            0,
-    top:             0,
-    bottom:          0,
-    borderTopLeftRadius:    Radius.lg,
-    borderBottomLeftRadius: Radius.lg,
-  },
-
-  cardEmoji: {
-    width:           52,
-    height:          52,
-    borderRadius:    Radius.md,
-    backgroundColor: 'rgba(255,215,0,0.08)',
+  emojiBox: {
+    width:           50,
+    height:          50,
+    borderRadius:    14,
     alignItems:      'center',
     justifyContent:  'center',
-    marginLeft:      Spacing.sm,
-    marginRight:     Spacing.md,
-    borderWidth:     1,
-    borderColor:     'rgba(255,215,0,0.15)',
+    flexShrink:      0,
   },
 
   emojiText: {
     fontSize: 26,
   },
 
-  cardContent: {
+  cardBody: {
     flex: 1,
   },
 
-  cardTop: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    marginBottom:   3,
-    gap:            Spacing.sm,
-  },
-
   cardTitle: {
-    fontSize:   15,
-    fontWeight: '700',
-    color:      Colors.textPrimary,
-    flex:       1,
+    fontSize:     14,
+    fontWeight:   '800',
+    color:        Colors.textPrimary,
+    marginBottom: 3,
   },
 
   cardSubtitle: {
-    fontSize:     12,
+    fontSize:     11,
     color:        Colors.textMuted,
-    marginBottom: 8,
+    marginBottom: 6,
   },
 
-  cardMeta: {
-    flexDirection: 'row',
-    gap:           Spacing.md,
+  miniBar: {
+    height:          5,
+    backgroundColor: Colors.border,
+    borderRadius:    Radius.full,
+    overflow:        'hidden',
   },
 
-  metaItem: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           3,
+  miniBarFill: {
+    height:       '100%',
+    borderRadius: Radius.full,
   },
 
-  metaText: {
-    fontSize:   11,
-    fontWeight: '600',
-    color:      Colors.textMuted,
-  },
-
-  // ── Difficulty Badge ──────────────────────────────────
-  diffBadge: {
+  // ── Difficulty Pill ────────────────────────────────────
+  diffPill: {
     paddingHorizontal: 8,
     paddingVertical:   3,
     borderRadius:      Radius.full,
-    borderWidth:       1,
+    flexShrink:        0,
   },
 
   diffText: {
-    fontSize:      9,
-    fontWeight:    '800',
-    letterSpacing: 0.5,
-  },
-
-  // ── Chevron ───────────────────────────────────────────
-  chevron: {
-    marginLeft: Spacing.sm,
-    opacity:    0.7,
+    fontSize:   10,
+    fontWeight: '700',
   },
 });

@@ -1,37 +1,48 @@
 // ============================================================
 // FILE: App.js
 // PURPOSE: The root of the S-MIB app.
-//          Sets up two required wrappers:
-//            1. NavigationContainer  — makes navigation work
-//            2. SafeAreaProvider     — respects phone notches/
-//                                      home bars on iOS & Android
-//          Then renders AppNavigator which has all 4 tabs.
+//          Sets up required wrappers (outermost → innermost):
+//            1. GestureHandlerRootView — enables swipe gestures
+//                                        on the Stack navigator
+//            2. SafeAreaProvider       — tells every screen where
+//                                        the safe zone is (notch,
+//                                        home bar, system nav bar)
+//            3. NavigationContainer    — manages navigation state
+//          Then renders RootNavigator which has the Tab + Stack.
 // ============================================================
+
+// IMPORTANT: gesture-handler import must be the very first line
+import 'react-native-gesture-handler';
 
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import AppNavigator from './src/navigation/AppNavigator';
-import { Colors } from './src/theme';
+import RootNavigator from './src/navigation/RootNavigator';
 
 export default function App() {
   return (
-    // SafeAreaProvider must wrap everything so screens know
-    // where the safe zone is (avoiding notch, status bar, home bar)
-    <SafeAreaProvider>
+    // GestureHandlerRootView enables swipe-back on the Stack navigator
+    <GestureHandlerRootView style={{ flex: 1 }}>
 
-      {/* NavigationContainer manages the navigation state */}
-      <NavigationContainer>
+      {/* SafeAreaProvider must wrap everything so screens know
+          where the safe zone is (notch, status bar, home bar) */}
+      <SafeAreaProvider>
 
-        {/* Status bar — light content (white icons) on our dark background */}
-        <StatusBar style="light" backgroundColor={Colors.background} />
+        {/* NavigationContainer manages all navigation state */}
+        <NavigationContainer>
 
-        {/* The main app with bottom tab navigation */}
-        <AppNavigator />
+          {/* Status bar — light content (white text/icons) */}
+          <StatusBar style="light" />
 
-      </NavigationContainer>
+          {/* RootNavigator: Stack(Tabs + ProjectDetail) */}
+          <RootNavigator />
 
-    </SafeAreaProvider>
+        </NavigationContainer>
+
+      </SafeAreaProvider>
+
+    </GestureHandlerRootView>
   );
 }

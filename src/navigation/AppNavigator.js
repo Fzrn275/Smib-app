@@ -1,31 +1,33 @@
 // ============================================================
 // FILE: src/navigation/AppNavigator.js
-// PURPOSE: Sets up the bottom tab navigation for S-MIB.
-//          4 tabs: Home, Projects, Help, Profile.
+// PURPOSE: Bottom tab navigation for S-MIB.
+//          4 tabs: Home, Explore, Progress, Profile.
 //
-// STYLE: Web3 dark vibe
-//   - Black tab bar background
-//   - Sarawak gold active icon + label
-//   - Gold top border on tab bar
-//   - Gold glow on active tab indicator
+// REFERENCE: docs/SMIB_Mockup.html — Version B (Student Friendly)
+// STYLE:
+//   - White tab bar background
+//   - Top border (#e2e8f0)
+//   - Active tab: teal-light bg pill + teal icon/label
+//   - Inactive: grey icons
 // ============================================================
 
 import { View, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import HomeScreen    from '../screens/HomeScreen';
+import HomeScreen     from '../screens/HomeScreen';
 import ProjectsScreen from '../screens/ProjectsScreen';
-import HelpScreen    from '../screens/HelpScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import HelpScreen     from '../screens/HelpScreen';
+import ProfileScreen  from '../screens/ProfileScreen';
 
 import { Colors } from '../theme';
 
 const Tab = createBottomTabNavigator();
 
 // ----------------------------------------------------------
-// CUSTOM TAB BAR ICON
-// Renders the icon with a gold glow background when active.
+// CUSTOM TAB ICON
+// Active state gets a teal-light pill background behind icon.
 // ----------------------------------------------------------
 function TabIcon({ name, focused }) {
   return (
@@ -33,7 +35,7 @@ function TabIcon({ name, focused }) {
       <Ionicons
         name={name}
         size={22}
-        color={focused ? Colors.gold : Colors.textMuted}
+        color={focused ? Colors.teal : Colors.textMuted}
       />
     </View>
   );
@@ -43,81 +45,86 @@ function TabIcon({ name, focused }) {
 // NAVIGATOR
 // ----------------------------------------------------------
 export default function AppNavigator() {
+  // insets.bottom = height of the phone's system navigation bar.
+  // On Android gesture-nav phones this is ~20-48px.
+  // On iPhones with a home indicator it's ~34px.
+  // We add it to the tab bar height and paddingBottom so the
+  // tab bar sits ABOVE the system nav bar instead of behind it.
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
-        // Hide the default top header on every screen
         headerShown: false,
 
-        // Tab bar Web3 dark styling
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopWidth:  2,
-          borderTopColor:  Colors.gold,
+          backgroundColor: Colors.card,              // White background
+          borderTopWidth:  1,
+          borderTopColor:  Colors.border,            // Subtle grey top border
+          height:          72 + insets.bottom,       // Grows to cover system nav
           paddingTop:      8,
-          // No fixed height — let SafeAreaProvider automatically add
-          // the right bottom padding for Android nav buttons & iOS home bar
+          paddingBottom:   8 + insets.bottom,        // Pushes content up
         },
 
-        // Active label colour = gold
-        tabBarActiveTintColor:   Colors.gold,
-        // Inactive label colour = muted grey
+        tabBarActiveTintColor:   Colors.teal,
         tabBarInactiveTintColor: Colors.textMuted,
 
         tabBarLabelStyle: {
-          fontSize:   11,
-          fontWeight: '700',
+          fontSize:   10,
+          fontWeight: '600',
           marginTop:  2,
         },
       }}
     >
-      {/* ── HOME TAB ───────────────────────────────────── */}
+
+      {/* ── HOME ───────────────────────────────────────── */}
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Utama',
+          tabBarLabel: 'Home',
           tabBarIcon: ({ focused }) => (
             <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} />
           ),
         }}
       />
 
-      {/* ── PROJECTS TAB ───────────────────────────────── */}
+      {/* ── EXPLORE ────────────────────────────────────── */}
       <Tab.Screen
-        name="Projects"
+        name="Explore"
         component={ProjectsScreen}
         options={{
-          tabBarLabel: 'Projek',
+          tabBarLabel: 'Explore',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'cube' : 'cube-outline'} focused={focused} />
+            <TabIcon name={focused ? 'search' : 'search-outline'} focused={focused} />
           ),
         }}
       />
 
-      {/* ── HELP TAB ───────────────────────────────────── */}
+      {/* ── PROGRESS ───────────────────────────────────── */}
       <Tab.Screen
-        name="Help"
+        name="Progress"
         component={HelpScreen}
         options={{
-          tabBarLabel: 'Bantuan',
+          tabBarLabel: 'Progress',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'help-circle' : 'help-circle-outline'} focused={focused} />
+            <TabIcon name={focused ? 'bar-chart' : 'bar-chart-outline'} focused={focused} />
           ),
         }}
       />
 
-      {/* ── PROFILE TAB ────────────────────────────────── */}
+      {/* ── PROFILE ────────────────────────────────────── */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarLabel: 'Profil',
+          tabBarLabel: 'Profile',
           tabBarIcon: ({ focused }) => (
             <TabIcon name={focused ? 'person' : 'person-outline'} focused={focused} />
           ),
         }}
       />
+
     </Tab.Navigator>
   );
 }
@@ -126,21 +133,16 @@ export default function AppNavigator() {
 // STYLES
 // ----------------------------------------------------------
 const styles = StyleSheet.create({
-  // Wrapper around each tab icon
   iconWrap: {
-    width:         40,
-    height:        32,
-    alignItems:    'center',
-    justifyContent:'center',
-    borderRadius:  8,
+    width:          40,
+    height:         32,
+    alignItems:     'center',
+    justifyContent: 'center',
+    borderRadius:   10,
   },
 
-  // Active tab: gold tinted background glow
+  // Active tab: teal-light background pill
   iconWrapActive: {
-    backgroundColor: Colors.goldDim,    // rgba(255, 215, 0, 0.12) — subtle gold bg
-    shadowColor:     Colors.gold,
-    shadowOffset:    { width: 0, height: 0 },
-    shadowOpacity:   0.5,
-    shadowRadius:    8,
+    backgroundColor: Colors.tealLight,
   },
 });

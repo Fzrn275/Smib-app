@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FFD700">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="S-MIB">
+    <title>Sarawak Maker-In-A-Box (S-MIB)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --sarawak-gold: #FFD700;
+            --sarawak-red: #D4411F;
+            --sarawak-black: #1A1A1A;
+            --success-green: #43A047;
+            --warning-orange: #FF6F00;
+            --info-blue: #2196F3;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FFD700 0%, #D4411F 50%, #1A1A1A 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #app-container {
+            max-width: 428px;
+            width: 100%;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen { display: none; min-height: 100vh; position: relative; }
+        .screen.active { display: block; }
+
+        .header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-primary {
+            background: linear-gradient(135deg, var(--sarawak-gold) 0%, var(--sarawak-red) 100%);
+            color: var(--sarawak-black);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .btn:active { transform: translateY(0); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--sarawak-gold) 0%, var(--sarawak-red) 100%);
+            color: var(--sarawak-black);
+            font-weight: 700;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid var(--sarawak-gold);
+            color: var(--sarawak-red);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 428px;
+            width: 100%;
+            background: var(--sarawak-black);
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 12px;
+            z-index: 100;
+            border-top: 3px solid var(--sarawak-gold);
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.3s;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .nav-item.active { color: var(--sarawak-gold); background: rgba(255,215,0,0.1); }
+        .nav-item:hover { color: var(--sarawak-gold); }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border-left: 4px solid var(--sarawak-gold);
+        }
+
+        .card:hover { box-shadow: 0 4px 16px rgba(255,215,0,0.3); transform: translateY(-2px); }
+
+        .project-card { cursor: pointer; position: relative; overflow: hidden; }
+
+        .project-image {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, #F5F5F5 0%, #E0E0E0 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .difficulty-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .difficulty-beginner { background: var(--success-green); color: white; }
+        .difficulty-intermediate { background: var(--warning-orange); color: white; }
+        .difficulty-advanced { background: var(--sarawak-red); color: white; }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #E0E0E0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--sarawak-gold) 0%, var(--sarawak-red) 100%);
+            transition: width 0.5s ease-out;
+        }
+
+        .offline-badge {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFE4B3 100%);
+            border: 2px solid var(--sarawak-gold);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .hornbill-logo { animation: pulse 2s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,215,0,0.3);
+            border-top: 5px solid var(--sarawak-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--sarawak-gold);
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.1);
+        }
+
+        .clickable { cursor: pointer; transition: all 0.2s; }
+        .clickable:hover { opacity: 0.8; }
+        .clickable:active { transform: scale(0.98); }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge-gold {
+            background: linear-gradient(135deg, var(--sarawak-gold) 0%, #FFA500 100%);
+            color: var(--sarawak-black);
+        }
+
+        .safety-warning {
+            background: #FFF3E0;
+            border: 2px solid var(--warning-orange);
+            border-left: 4px solid var(--warning-orange);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            display: flex;
+            gap: 12px;
+            align-items: start;
+        }
+
+        .achievement-card {
+            background: linear-gradient(135deg, var(--sarawak-gold) 0%, #FFA500 100%);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            color: var(--sarawak-black);
+            box-shadow: 0 4px 12px rgba(255,215,0,0.3);
+        }
+
+        .language-selector {
+            display: inline-flex;
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .language-option {
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .language-option.active { background: white; color: var(--sarawak-red); }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--sarawak-black);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            display: none;
+            z-index: 2000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 2px solid var(--sarawak-gold);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .icon { width: 24px; height: 24px; display: inline-block; }
+
+        .filter-btn { transition: all 0.3s; }
+        .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+        /* Project hidden by filter */
+        .project-hidden { display: none !important; }
+
+        /* Project Detail Screen */
+        .detail-tab {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: #999;
+            transition: all 0.3s;
+        }
+        .detail-tab.active {
+            border-bottom: 3px solid var(--sarawak-gold);
+            color: var(--sarawak-red);
+        }
+
+        .step-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #E0E0E0;
+            transition: all 0.3s;
+        }
+        .step-item.current {
+            border-left: 4px solid var(--sarawak-gold);
+            box-shadow: 0 4px 16px rgba(255,215,0,0.25);
+        }
+        .step-item.done {
+            border-left: 4px solid var(--success-green);
+            background: #F9FFF9;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .material-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        .material-check {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: 2px solid #E0E0E0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .material-check.checked {
+            background: var(--success-green);
+            border-color: var(--success-green);
+            color: white;
+        }
+
+        /* Help accordion */
+        .help-solutions {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #E0E0E0;
+        }
+        .help-solutions.open { display: block; }
+
+        .solution-step {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .solution-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--sarawak-gold);
+            color: var(--sarawak-black);
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes stepDone {
+            0%   { background: #C8E6C9; transform: scale(1.015); }
+            100% { background: #F9FFF9; transform: scale(1); }
+        }
+
+        .tip-box {
+            background: #FFF9E6;
+            border-left: 3px solid var(--sarawak-gold);
+            border-radius: 0 8px 8px 0;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #7A5C00;
+        }
+
+        .avatar-option {
+            font-size: 36px;
+            padding: 10px;
+            border-radius: 12px;
+            border: 3px solid #E0E0E0;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+        .avatar-option.active {
+            border-color: var(--sarawak-gold);
+            background: #FFF9E6;
+            transform: scale(1.12);
+        }
+
+        /* Screen fade-in (transition doesn't work with display:none; use animation instead) */
+        @keyframes screenIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .screen.active { animation: screenIn 0.22s ease-out; }
+
+        /* Level badge */
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, var(--sarawak-gold) 0%, #FFA500 100%);
+            color: var(--sarawak-black);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        /* XP progress bar */
+        .xp-bar-wrap {
+            background: rgba(255,255,255,0.4);
+            border-radius: 6px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .xp-bar-fill {
+            height: 100%;
+            background: white;
+            border-radius: 6px;
+            transition: width 0.6s ease-out;
+        }
+
+        /* Locked achievement */
+        .achievement-locked {
+            background: #F5F5F5;
+            border: 2px dashed #E0E0E0;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            opacity: 0.65;
+        }
+
+        /* Home card status tag */
+        .card-status-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-top: 6px;
+        }
+        .card-status-inprogress { background: #FFF3E0; color: var(--warning-orange); }
+        .card-status-done { background: #E8F5E9; color: var(--success-green); }
+
+        /* Confetti */
+        @keyframes confetti-fall {
+            0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--drift, 0px), 100vh) rotate(720deg); opacity: 0; }
+        }
+        .confetti-piece {
+            position: fixed;
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 9999;
+            animation: confetti-fall linear forwards;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+
+        <!-- Splash Screen -->
+        <div id="splash" class="screen active">
+            <div style="background: linear-gradient(135deg, var(--sarawak-gold) 0%, var(--sarawak-red) 50%, var(--sarawak-black) 100%); height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <svg class="hornbill-logo" style="width: 180px; height: 180px;" viewBox="0 0 200 200">
+                    <ellipse cx="100" cy="110" rx="45" ry="55" fill="var(--sarawak-black)"/>
+                    <circle cx="100" cy="70" r="30" fill="var(--sarawak-black)"/>
+                    <path d="M 100 55 Q 140 45 145 50 Q 148 52 145 55 Q 140 58 100 65 Z" fill="var(--sarawak-gold)" stroke="var(--sarawak-red)" stroke-width="2"/>
+                    <path d="M 110 45 Q 135 35 140 40 Q 142 42 138 45 Q 120 50 110 52 Z" fill="var(--sarawak-red)" stroke="var(--sarawak-black)" stroke-width="2"/>
+                    <circle cx="105" cy="65" r="5" fill="white"/>
+                    <circle cx="106" cy="65" r="2.5" fill="var(--sarawak-black)"/>
+                    <path d="M 75 100 Q 50 110 45 140 Q 48 145 60 140 Q 75 130 80 120 Z" fill="var(--sarawak-black)" opacity="0.8"/>
+                    <path d="M 90 155 L 85 180 L 90 185 L 95 175 Z" fill="var(--sarawak-black)"/>
+                    <path d="M 100 158 L 98 185 L 103 190 L 105 178 Z" fill="var(--sarawak-black)"/>
+                    <path d="M 110 155 L 115 180 L 110 185 L 105 175 Z" fill="var(--sarawak-black)"/>
+                    <line x1="90" y1="160" x2="88" y2="175" stroke="var(--sarawak-red)" stroke-width="4"/>
+                    <line x1="110" y1="160" x2="112" y2="175" stroke="var(--sarawak-red)" stroke-width="4"/>
+                </svg>
+                <h1 style="color: white; font-size: 32px; font-weight: 900; margin-top: 32px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Sarawak Maker-In-A-Box</h1>
+                <p style="color: white; font-size: 18px; margin-top: 12px; opacity: 0.95; font-weight: 600;">S-MIB</p>
+                <p style="color: white; font-size: 16px; margin-top: 8px; opacity: 0.85;">Belajar • Bina • Berjaya</p>
+                <div class="spinner" style="margin-top: 48px;"></div>
+                <p style="color: white; font-size: 13px; margin-top: 16px; opacity: 0.7;">Memuatkan projek anda...</p>
+            </div>
+        </div>
+
+        <!-- Onboarding Screen -->
+        <div id="onboarding" class="screen">
+            <div style="height: 100vh; background: linear-gradient(135deg, #FFF9E6 0%, white 100%); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 30px 40px;">
+                <div style="text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="onboarding-emoji" style="font-size: 100px; margin-bottom: 32px;">👨‍🔧</div>
+                    <h2 id="onboarding-title" style="font-size: 28px; font-weight: 800; color: var(--sarawak-black); margin-bottom: 16px;">Jadilah Seorang Maker!</h2>
+                    <h3 id="onboarding-subtitle" style="font-size: 18px; font-weight: 600; color: var(--sarawak-red); margin-bottom: 12px;">Become A Maker!</h3>
+                    <p id="onboarding-desc" style="font-size: 16px; color: #666; line-height: 1.6; max-width: 320px; margin: 0 auto;">Build real STEM projects using junkyard materials around you</p>
+                </div>
+                <div style="width: 100%;">
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 32px;">
+                        <div class="onboarding-dot" style="width: 12px; height: 12px; border-radius: 50%; background: var(--sarawak-gold);"></div>
+                        <div class="onboarding-dot" style="width: 12px; height: 12px; border-radius: 50%; background: #E0E0E0;"></div>
+                        <div class="onboarding-dot" style="width: 12px; height: 12px; border-radius: 50%; background: #E0E0E0;"></div>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.nextOnboarding()" style="padding: 16px; font-size: 16px; width: 100%;">
+                        Seterusnya / Next →
+                    </button>
+                    <button onclick="app.showScreen('profile-setup')" style="background: none; border: none; color: #999; font-size: 12px; cursor: pointer; padding: 10px; width: 100%; margin-top: 4px;">
+                        Langkau / Skip
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Setup Screen -->
+        <div id="profile-setup" class="screen">
+            <div style="min-height: 100vh; background: linear-gradient(135deg, #FFF9E6 0%, white 100%); display: flex; flex-direction: column; align-items: center; padding: 60px 30px 40px;">
+                <div style="text-align: center; margin-bottom: 36px;">
+                    <div style="font-size: 64px; margin-bottom: 16px;">👤</div>
+                    <h2 style="font-size: 26px; font-weight: 800; color: var(--sarawak-black); margin-bottom: 8px;">Siapakah anda?</h2>
+                    <p style="font-size: 15px; color: #666;">Who are you?</p>
+                </div>
+
+                <div style="width: 100%; margin-bottom: 28px;">
+                    <p style="font-size: 13px; font-weight: 700; color: #555; margin-bottom: 12px; text-align: center;">Pilih avatar anda / Pick your avatar</p>
+                    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                        <div class="avatar-option active" data-avatar="🦅" onclick="app.selectAvatar('🦅', this)">🦅</div>
+                        <div class="avatar-option" data-avatar="👨‍🔧" onclick="app.selectAvatar('👨‍🔧', this)">👨‍🔧</div>
+                        <div class="avatar-option" data-avatar="👩‍🔬" onclick="app.selectAvatar('👩‍🔬', this)">👩‍🔬</div>
+                        <div class="avatar-option" data-avatar="🤖" onclick="app.selectAvatar('🤖', this)">🤖</div>
+                        <div class="avatar-option" data-avatar="⚡" onclick="app.selectAvatar('⚡', this)">⚡</div>
+                        <div class="avatar-option" data-avatar="🌟" onclick="app.selectAvatar('🌟', this)">🌟</div>
+                    </div>
+                </div>
+
+                <div style="width: 100%; margin-bottom: 28px;">
+                    <label style="font-size: 14px; font-weight: 700; color: #555; display: block; margin-bottom: 8px;">Nama anda / Your name</label>
+                    <input type="text" id="profile-name-input" placeholder="cth: Ahmad, Siti, Karim ..." maxlength="30" style="font-size: 16px;" onkeydown="if(event.key==='Enter') app.submitProfile()">
+                </div>
+
+                <button class="btn btn-primary" onclick="app.submitProfile()" style="padding: 16px; font-size: 16px; width: 100%; margin-bottom: 16px;">
+                    Mula! / Let's Go! 🚀
+                </button>
+                <button id="profile-skip-btn" onclick="app.skipProfile()" style="background: none; border: none; color: #999; font-size: 13px; cursor: pointer; padding: 8px;">
+                    Langkau / Skip
+                </button>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="home" class="screen">
+            <div style="min-height: 100vh; background: #F9F9F9; padding-bottom: 90px;">
+                <div class="header header-primary">
+                    <svg class="hornbill-logo" style="width: 36px; height: 36px;" viewBox="0 0 200 200">
+                        <ellipse cx="100" cy="110" rx="45" ry="55" fill="var(--sarawak-black)"/>
+                        <circle cx="100" cy="70" r="30" fill="var(--sarawak-black)"/>
+                        <path d="M 100 55 Q 140 45 145 50 Q 148 52 145 55 Q 140 58 100 65 Z" fill="white" stroke="var(--sarawak-black)" stroke-width="2"/>
+                        <circle cx="105" cy="65" r="4" fill="white"/>
+                        <circle cx="106" cy="65" r="2" fill="var(--sarawak-black)"/>
+                    </svg>
+                    <div style="flex: 1;">
+                        <h1 style="font-size: 18px; font-weight: 900; color: var(--sarawak-black);">S-MIB</h1>
+                        <p style="font-size: 10px; opacity: 0.8; font-weight: 600;">Maker-In-A-Box</p>
+                    </div>
+                    <div class="language-selector">
+                        <div class="language-option active" id="lang-bm" onclick="app.switchLanguage('bm')">BM</div>
+                        <div class="language-option" id="lang-en" onclick="app.switchLanguage('en')">EN</div>
+                    </div>
+                </div>
+
+                <div style="padding: 20px;">
+                    <!-- Welcome Message -->
+                    <div style="background: linear-gradient(135deg, var(--sarawak-gold) 0%, var(--sarawak-red) 100%); border-radius: 12px; padding: 20px; margin-bottom: 20px; color: white;">
+                        <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 6px;">
+                            <span id="home-welcome-text" data-bm="👋 Selamat Datang!" data-en="👋 Welcome!">👋 Selamat Datang!</span>
+                        </h2>
+                        <p style="font-size: 13px; opacity: 0.95;" data-bm="Bina sesuatu yang hebat hari ini?" data-en="Ready to build something amazing today?">
+                            Bina sesuatu yang hebat hari ini?
+                        </p>
+                    </div>
+
+                    <!-- Offline Mode Badge -->
+                    <div class="offline-badge">
+                        <svg style="width: 28px; height: 28px;" viewBox="0 0 24 24" fill="none" stroke="var(--sarawak-red)" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: var(--sarawak-red); font-size: 14px;" data-bm="Mod Luar Talian Aktif" data-en="Offline Mode Active">Mod Luar Talian Aktif</div>
+                            <div style="font-size: 12px; color: #666;" data-bm="4 projek • Tiada internet diperlukan" data-en="4 projects • No internet needed">4 projek • Tiada internet diperlukan</div>
+                        </div>
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--success-green)" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+
+                    <!-- Quick Start Project -->
+                    <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <span data-bm="⚡ Mula Pantas" data-en="⚡ Quick Start">⚡ Mula Pantas</span>
+                        <span class="badge badge-gold">BARU!</span>
+                    </h3>
+
+                    <div class="card project-card" data-category="electronics" data-project-id="led-torch" onclick="app.openProject('led-torch')">
+                        <div class="project-image">
+                            💡
+                            <div class="difficulty-badge difficulty-beginner">BEGINNER</div>
+                        </div>
+                        <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Lampu Suluh LED daripada Bateri Lama</h4>
+                        <p style="font-size: 13px; color: var(--sarawak-red); margin-bottom: 8px; font-weight: 600;">LED Torch from Old Batteries</p>
+                        <p style="font-size: 13px; color: #666; margin-bottom: 12px; line-height: 1.5;" data-bm="Projek pertama anda! Bina suluh menggunakan LED dan bateri terpakai." data-en="Your first project! Build a working torch using scavenged LEDs and batteries.">
+                            Projek pertama anda! Bina suluh menggunakan LED dan bateri terpakai.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; font-size: 12px; font-weight: 600;">
+                            <div style="color: #666;" data-bm="⏱️ 30 min" data-en="⏱️ 30 min">⏱️ 30 min</div>
+                            <div style="color: #666;" data-bm="🔧 5 bahan" data-en="🔧 5 items">🔧 5 bahan</div>
+                            <div style="color: var(--success-green);" data-bm="✓ Selamat" data-en="✓ Safe">✓ Selamat</div>
+                        </div>
+                        <div id="quickstart-status" style="margin-bottom: 8px;"></div>
+                        <button id="quickstart-btn" class="btn btn-primary" style="width: 100%; font-size: 14px;" onclick="event.stopPropagation(); app.openProject('led-torch')">
+                            <span data-bm="🚀 Mula Sekarang" data-en="🚀 Start Now">🚀 Mula Sekarang</span>
+                        </button>
+                    </div>
+
+                    <!-- All Projects -->
+                    <h3 style="font-size: 17px; font-weight: 800; margin-top: 24px; margin-bottom: 12px;" data-bm="📚 Semua Projek" data-en="📚 All Projects">
+                        📚 Semua Projek
+                    </h3>
+
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 8px;">
+                        <button class="filter-btn active" data-filter="all" style="padding: 8px 16px; border-radius: 20px; border: 2px solid var(--sarawak-gold); background: linear-gradient(135deg, var(--sarawak-gold) 0%, var(--sarawak-red) 100%); color: white; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 12px;" onclick="app.filterProjects('all', this)">
+                            <span data-bm="Semua" data-en="All">Semua</span>
+                        </button>
+                        <button class="filter-btn" data-filter="electronics" style="padding: 8px 16px; border-radius: 20px; border: 2px solid #E0E0E0; background: white; color: #666; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 12px;" onclick="app.filterProjects('electronics', this)">
+                            ⚡ Electronics
+                        </button>
+                        <button class="filter-btn" data-filter="mechanics" style="padding: 8px 16px; border-radius: 20px; border: 2px solid #E0E0E0; background: white; color: #666; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 12px;" onclick="app.filterProjects('mechanics', this)">
+                            ⚙️ Mechanics
+                        </button>
+                        <button class="filter-btn" data-filter="solar" style="padding: 8px 16px; border-radius: 20px; border: 2px solid #E0E0E0; background: white; color: #666; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 12px;" onclick="app.filterProjects('solar', this)">
+                            ☀️ Solar
+                        </button>
+                    </div>
+
+                    <!-- Project Cards -->
+                    <div class="card project-card" data-category="mechanics" data-project-id="motor-generator" onclick="app.openProject('motor-generator')">
+                        <div class="project-image">
+                            ⚙️
+                            <div class="difficulty-badge difficulty-intermediate">INTERMEDIATE</div>
+                        </div>
+                        <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;" data-bm="Penjana Motor DC" data-en="DC Motor Generator">Penjana Motor DC</h4>
+                        <p style="font-size: 13px; color: #666; margin-bottom: 10px;" data-bm="Jana elektrik menggunakan motor terpakai" data-en="Generate electricity from a salvaged motor">Jana elektrik menggunakan motor terpakai</p>
+                        <div style="display: flex; gap: 16px; font-size: 12px; color: #999; font-weight: 600; margin-bottom: 4px;">
+                            <span data-bm="⏱️ 2 jam" data-en="⏱️ 2 hrs">⏱️ 2 jam</span>
+                            <span data-bm="🔧 6 bahan" data-en="🔧 6 items">🔧 6 bahan</span>
+                            <span style="color: var(--sarawak-gold);" data-bm="⭐ 200 mata" data-en="⭐ 200 pts">⭐ 200 mata</span>
+                        </div>
+                        <div class="card-progress-area"></div>
+                    </div>
+
+                    <div class="card project-card" data-category="solar" data-project-id="solar-panel" onclick="app.openProject('solar-panel')">
+                        <div class="project-image">
+                            ☀️
+                            <div class="difficulty-badge difficulty-advanced">ADVANCED</div>
+                        </div>
+                        <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;" data-bm="Panel Solar DIY dari CD Lama" data-en="DIY Solar Panel from Old CDs">Panel Solar DIY dari CD Lama</h4>
+                        <p style="font-size: 13px; color: #666; margin-bottom: 10px;" data-bm="Kuasa solar dari CD kitar semula" data-en="Solar power from recycled CDs">Kuasa solar dari CD kitar semula</p>
+                        <div style="display: flex; gap: 16px; font-size: 12px; color: #999; font-weight: 600; margin-bottom: 4px;">
+                            <span data-bm="⏱️ 4 jam" data-en="⏱️ 4 hrs">⏱️ 4 jam</span>
+                            <span data-bm="🔧 6 bahan" data-en="🔧 6 items">🔧 6 bahan</span>
+                            <span style="color: var(--sarawak-gold);" data-bm="⭐ 350 mata" data-en="⭐ 350 pts">⭐ 350 mata</span>
+                        </div>
+                        <div class="card-progress-area"></div>
+                    </div>
+
+                    <div class="card project-card" data-category="mechanics" data-project-id="mini-fan" onclick="app.openProject('mini-fan')">
+                        <div class="project-image">
+                            🌀
+                            <div class="difficulty-badge difficulty-intermediate">INTERMEDIATE</div>
+                        </div>
+                        <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;" data-bm="Kipas Mini DIY dari Motor Lama" data-en="DIY Mini Fan from Old Motor">Kipas Mini DIY dari Motor Lama</h4>
+                        <p style="font-size: 13px; color: #666; margin-bottom: 10px;" data-bm="Kipas berfungsi dari motor terpakai" data-en="Working fan from a salvaged DC motor">Kipas berfungsi dari motor terpakai</p>
+                        <div style="display: flex; gap: 16px; font-size: 12px; color: #999; font-weight: 600; margin-bottom: 4px;">
+                            <span data-bm="⏱️ 1 jam" data-en="⏱️ 1 hr">⏱️ 1 jam</span>
+                            <span data-bm="🔧 5 bahan" data-en="🔧 5 items">🔧 5 bahan</span>
+                            <span style="color: var(--sarawak-gold);" data-bm="⭐ 150 mata" data-en="⭐ 150 pts">⭐ 150 mata</span>
+                        </div>
+                        <div class="card-progress-area"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="app.switchTab('home')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Utama" data-en="Home">Utama</span>
+                </div>
+                <div class="nav-item" onclick="app.switchTab('my-projects')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Projek" data-en="Projects">Projek</span>
+                </div>
+                <div class="nav-item" onclick="app.switchTab('help')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Bantuan" data-en="Help">Bantuan</span>
+                </div>
+                <div class="nav-item" onclick="app.switchTab('profile')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span style="margin-top: 4px;" data-bm="Profil" data-en="Profile">Profil</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Projects Screen -->
+        <div id="my-projects" class="screen">
+            <div style="min-height: 100vh; background: #F9F9F9; padding-bottom: 90px;">
+                <div class="header header-primary">
+                    <h1 style="flex: 1; font-size: 18px; font-weight: 900;" data-bm="Projek Saya" data-en="My Projects">Projek Saya</h1>
+                    <span id="projects-count-badge" style="background: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--sarawak-red); margin-right: 8px;">0 Jumlah</span>
+                    <div class="language-selector">
+                        <div class="language-option active lang-btn-bm" onclick="app.switchLanguage('bm')">BM</div>
+                        <div class="language-option lang-btn-en" onclick="app.switchLanguage('en')">EN</div>
+                    </div>
+                </div>
+
+                <div style="padding: 20px;">
+                    <div id="my-projects-list">
+                        <!-- Dynamically populated -->
+                    </div>
+                    <div id="no-projects-msg" style="display: none; text-align: center; padding: 40px 20px; color: #999;">
+                        <div style="font-size: 60px; margin-bottom: 16px;">🔧</div>
+                        <p style="font-weight: 700; font-size: 16px; margin-bottom: 8px;" data-bm="Tiada projek lagi!" data-en="No projects yet!">Tiada projek lagi!</p>
+                        <p style="font-size: 13px;" data-bm="Pergi ke Utama untuk mulakan projek pertama anda." data-en="Go to Home to start your first project.">Pergi ke Utama untuk mulakan projek pertama anda.</p>
+                        <button class="btn btn-primary" style="margin-top: 20px;" onclick="app.switchTab('home')" data-bm="Terokai Projek" data-en="Explore Projects">Terokai Projek</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="app.switchTab('home')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Utama" data-en="Home">Utama</span>
+                </div>
+                <div class="nav-item active" onclick="app.switchTab('my-projects')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Projek" data-en="Projects">Projek</span>
+                </div>
+                <div class="nav-item" onclick="app.switchTab('help')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Bantuan" data-en="Help">Bantuan</span>
+                </div>
+                <div class="nav-item" onclick="app.switchTab('profile')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span style="margin-top: 4px;" data-bm="Profil" data-en="Profile">Profil</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Screen -->
+        <div id="help" class="screen">
+            <div style="min-height: 100vh; background: #F9F9F9; padding-bottom: 90px;">
+                <div class="header header-primary">
+                    <h1 style="flex: 1; font-size: 18px; font-weight: 900;" data-bm="🆘 Bantuan" data-en="🆘 Help">🆘 Bantuan</h1>
+                    <div class="language-selector">
+                        <div class="language-option active lang-btn-bm" onclick="app.switchLanguage('bm')">BM</div>
+                        <div class="language-option lang-btn-en" onclick="app.switchLanguage('en')">EN</div>
+                    </div>
+                </div>
+
+                <div style="padding: 20px;">
+                    <div class="card" style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-left: 4px solid var(--info-blue);">
+                        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;" data-bm="💡 Tersekat? Tiada Masalah!" data-en="💡 Stuck? No Problem!">💡 Tersekat? Tiada Masalah!</h3>
+                        <p style="font-size: 13px; color: #666; line-height: 1.5;" data-bm="Membuat adalah tentang belajar dari kesilapan. Berikut cara menyelesaikan masalah biasa." data-en="Making is about learning from mistakes. Here's how to fix common issues.">
+                            Membuat adalah tentang belajar dari kesilapan. Berikut cara menyelesaikan masalah biasa.
+                        </p>
+                    </div>
+
+                    <div class="card" style="background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CC 100%); border-left: 4px solid var(--sarawak-gold); margin-bottom: 8px;">
+                        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;" data-bm="💡 Tips Am Maker" data-en="💡 General Maker Tips">💡 Tips Am Maker</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; gap: 10px; font-size: 13px; color: #555; align-items: flex-start;"><span>♻️</span><span data-bm="Guna semula bahan buangan — bateri, wayar, motor dari mainan lama semuanya boleh digunakan." data-en="Reuse discarded materials — batteries, wires, motors from old toys all work.">Guna semula bahan buangan — bateri, wayar, motor dari mainan lama semuanya boleh digunakan.</span></div>
+                            <div style="display: flex; gap: 10px; font-size: 13px; color: #555; align-items: flex-start;"><span>🔧</span><span data-bm="Jika gagal, cuba lagi. Kegagalan adalah sebahagian daripada proses pembelajaran!" data-en="If it fails, try again. Failure is part of the learning process!">Jika gagal, cuba lagi. Kegagalan adalah sebahagian daripada proses pembelajaran!</span></div>
+                            <div style="display: flex; gap: 10px; font-size: 13px; color: #555; align-items: flex-start;"><span>🧪</span><span data-bm="Uji setiap komponen secara berasingan sebelum menyambung semuanya bersama." data-en="Test each component separately before connecting everything together.">Uji setiap komponen secara berasingan sebelum menyambung semuanya bersama.</span></div>
+                            <div style="display: flex; gap: 10px; font-size: 13px; color: #555; align-items: flex-start;"><span>📸</span><span data-bm="Ambil gambar projek siap anda dan tunjukkan kepada guru atau ibu bapa!" data-en="Take a photo of your finished project and show it to your teacher or parents!">Ambil gambar projek siap anda dan tunjukkan kepada guru atau ibu bapa!</span></div>
+                        </div>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 700; margin-top: 20px; margin-bottom: 12px;" data-bm="Masalah Biasa" data-en="Common Problems">Masalah Biasa</h3>
+
+                    <!-- Help Card 1 -->
+                    <div class="card clickable" onclick="app.toggleHelp('help-led')">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 4px;">💡 LED Tidak Menyala</h4>
+                                <p style="font-size: 12px; color: #666;" data-bm="Semak kekutuban, bateri, sambungan" data-en="Check polarity, battery, connections">Semak kekutuban, bateri, sambungan</p>
+                            </div>
+                            <span id="help-led-arrow" style="font-size: 18px; color: #999; transition: transform 0.3s;">▼</span>
+                        </div>
+                        <div id="help-led" class="help-solutions">
+                            <div class="solution-step">
+                                <div class="solution-num">1</div>
+                                <div><strong style="font-size: 13px;">Semak kekutuban LED</strong><br><span style="font-size: 12px; color: #666;">Kaki panjang (+) ke positif. Kaki pendek (-) ke negatif.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">2</div>
+                                <div><strong style="font-size: 13px;">Uji bateri secara langsung</strong><br><span style="font-size: 12px; color: #666;">Sentuh LED terus ke terminal bateri untuk menguji jika LED masih berfungsi.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">3</div>
+                                <div><strong style="font-size: 13px;">Semak sambungan wayar</strong><br><span style="font-size: 12px; color: #666;">Pastikan semua sambungan wayar kemas dan tidak longgar.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">4</div>
+                                <div><strong style="font-size: 13px;">Cuba LED lain</strong><br><span style="font-size: 12px; color: #666;">LED mungkin sudah rosak. Gantikan dengan LED baru.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Help Card 2 -->
+                    <div class="card clickable" onclick="app.toggleHelp('help-motor')">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 4px;">⚙️ Motor Tidak Berputar</h4>
+                                <p style="font-size: 12px; color: #666;" data-bm="Kuasa, geseran, bahagian rosak" data-en="Power source, friction, broken parts">Kuasa, geseran, bahagian rosak</p>
+                            </div>
+                            <span id="help-motor-arrow" style="font-size: 18px; color: #999; transition: transform 0.3s;">▼</span>
+                        </div>
+                        <div id="help-motor" class="help-solutions">
+                            <div class="solution-step">
+                                <div class="solution-num">1</div>
+                                <div><strong style="font-size: 13px;">Semak sambungan bateri</strong><br><span style="font-size: 12px; color: #666;">Pastikan merah ke merah, hitam ke hitam.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">2</div>
+                                <div><strong style="font-size: 13px;">Uji motor secara langsung</strong><br><span style="font-size: 12px; color: #666;">Sambung motor terus ke bateri tanpa wayar lain.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">3</div>
+                                <div><strong style="font-size: 13px;">Semak halangan fizikal</strong><br><span style="font-size: 12px; color: #666;">Pastikan tiada objek menyekat aci motor daripada berputar.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">4</div>
+                                <div><strong style="font-size: 13px;">Bersihkan sentuhan motor</strong><br><span style="font-size: 12px; color: #666;">Lap sentuhan motor dengan kain kering bersih.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Help Card 3 -->
+                    <div class="card clickable" onclick="app.toggleHelp('help-solar')">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 4px;">☀️ Panel Solar Tidak Menjana</h4>
+                                <p style="font-size: 12px; color: #666;">Pendedahan cahaya, sambungan, bahan</p>
+                            </div>
+                            <span id="help-solar-arrow" style="font-size: 18px; color: #999; transition: transform 0.3s;">▼</span>
+                        </div>
+                        <div id="help-solar" class="help-solutions">
+                            <div class="solution-step">
+                                <div class="solution-num">1</div>
+                                <div><strong style="font-size: 13px;">Pastikan cahaya cukup</strong><br><span style="font-size: 12px; color: #666;">Panel CD memerlukan cahaya matahari langsung yang terik untuk berfungsi.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">2</div>
+                                <div><strong style="font-size: 13px;">Semak sambungan siri</strong><br><span style="font-size: 12px; color: #666;">Pastikan setiap CD disambung dari positif ke negatif secara siri.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">3</div>
+                                <div><strong style="font-size: 13px;">Ukur dengan voltmeter</strong><br><span style="font-size: 12px; color: #666;">Jangkakan 0.5-2V. Jika tiada bacaan, semak sambungan wayar.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Help Card 4 -->
+                    <div class="card clickable" onclick="app.toggleHelp('help-fan')">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 4px;">🌀 Kipas Tidak Berputar Laju</h4>
+                                <p style="font-size: 12px; color: #666;" data-bm="Keseimbangan bilah, kuasa, geseran" data-en="Blade balance, power, friction">Keseimbangan bilah, kuasa, geseran</p>
+                            </div>
+                            <span id="help-fan-arrow" style="font-size: 18px; color: #999; transition: transform 0.3s;">▼</span>
+                        </div>
+                        <div id="help-fan" class="help-solutions">
+                            <div class="solution-step">
+                                <div class="solution-num">1</div>
+                                <div><strong style="font-size: 13px;">Semak keseimbangan bilah</strong><br><span style="font-size: 12px; color: #666;">Pastikan semua bilah mempunyai saiz dan berat yang sama untuk keseimbangan.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">2</div>
+                                <div><strong style="font-size: 13px;">Gunakan kadbod lebih nipis</strong><br><span style="font-size: 12px; color: #666;">Bilah yang lebih ringan bermakna motor boleh berputar lebih laju.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">3</div>
+                                <div><strong style="font-size: 13px;">Semak bateri</strong><br><span style="font-size: 12px; color: #666;">Bateri lemah = motor perlahan. Cuba bateri baru atau yang lebih penuh.</span></div>
+                            </div>
+                            <div class="solution-step">
+                                <div class="solution-num">4</div>
+                                <div><strong style="font-size: 13px;">Kurangkan bilah</strong><br><span style="font-size: 12px; color: #666;">Kurang bilah = kurang beban = putaran lebih laju. Cuba dengan 3 bilah sahaja.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="safety-warning">
+                        <span style="font-size: 32px;">⚠️</span>
+                        <div>
+                            <div style="font-weight: 700; margin-bottom: 4px;" data-bm="Keselamatan Dahulu!" data-en="Safety First!">Keselamatan Dahulu!</div>
+                            <p style="font-size: 12px; color: #666; line-height: 1.5;" data-bm="Jangan sentuh kedua-dua terminal bateri serentak. Jangan gunakan bateri rosak. Minta bantuan jika tidak pasti." data-en="Never touch both battery terminals at once. Don't use damaged batteries. Ask for help if unsure.">
+                                Jangan sentuh kedua-dua terminal bateri serentak. Jangan gunakan bateri rosak. Minta bantuan jika tidak pasti.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="app.switchTab('home')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Utama" data-en="Home">Utama</span>
+                </div>
+                <div class="nav-item" onclick="app.switchTab('my-projects')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Projek" data-en="Projects">Projek</span>
+                </div>
+                <div class="nav-item active" onclick="app.switchTab('help')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Bantuan" data-en="Help">Bantuan</span>
+                </div>
+                <div class="nav-item" onclick="app.switchTab('profile')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span style="margin-top: 4px;" data-bm="Profil" data-en="Profile">Profil</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Screen -->
+        <div id="profile" class="screen">
+            <div style="min-height: 100vh; background: #F9F9F9; padding-bottom: 90px;">
+                <div class="header" style="background: linear-gradient(135deg, var(--sarawak-gold) 0%, var(--sarawak-red) 100%); padding: 20px 20px 24px; position: relative;">
+                    <div style="position: absolute; top: 14px; left: 16px;">
+                        <div class="language-selector">
+                            <div class="language-option active lang-btn-bm" onclick="app.switchLanguage('bm')">BM</div>
+                            <div class="language-option lang-btn-en" onclick="app.switchLanguage('en')">EN</div>
+                        </div>
+                    </div>
+                    <button onclick="app.editProfile()" style="position: absolute; top: 14px; right: 16px; background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.6); color: var(--sarawak-black); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer;" data-bm="✏️ Edit" data-en="✏️ Edit">✏️ Edit</button>
+                    <div style="width: 100%; text-align: center; padding-top: 8px;">
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: white; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 900; color: var(--sarawak-red); border: 4px solid var(--sarawak-black);">
+                            <span id="profile-avatar-display">🦅</span>
+                        </div>
+                        <h2 id="profile-name-display" style="font-size: 22px; font-weight: 800; color: var(--sarawak-black);">Maker Sarawak</h2>
+                        <p style="font-size: 13px; color: var(--sarawak-black); opacity: 0.85; font-weight: 600; margin-top: 4px;" data-bm="Maker Luar Bandar • Sarawak" data-en="Rural Maker • Sarawak">Maker Luar Bandar • Sarawak</p>
+                        <div id="profile-level-badge" class="level-badge" style="margin-top: 10px;">⚡ Level 1 — Maker Baru</div>
+                        <div class="xp-bar-wrap" style="max-width: 200px; margin: 6px auto 0;">
+                            <div id="profile-xp-bar" class="xp-bar-fill" style="width: 0%;"></div>
+                        </div>
+                        <p id="profile-xp-text" style="font-size: 11px; color: var(--sarawak-black); opacity: 0.75; font-weight: 600; margin-top: 4px;">0 / 100 XP</p>
+                    </div>
+                </div>
+
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                        <div class="card" style="text-align: center; padding: 16px;">
+                            <div id="stat-projects" style="font-size: 28px; font-weight: 900; color: var(--sarawak-red);">0</div>
+                            <div style="font-size: 11px; color: #666; font-weight: 600;" data-bm="Projek" data-en="Projects">Projek</div>
+                        </div>
+                        <div class="card" style="text-align: center; padding: 16px;">
+                            <div id="stat-badges" style="font-size: 28px; font-weight: 900; color: var(--sarawak-gold);">0</div>
+                            <div style="font-size: 11px; color: #666; font-weight: 600;" data-bm="Lencana" data-en="Badges">Lencana</div>
+                        </div>
+                        <div class="card" style="text-align: center; padding: 16px;">
+                            <div id="stat-points" style="font-size: 28px; font-weight: 900; color: var(--success-green);">0</div>
+                            <div style="font-size: 11px; color: #666; font-weight: 600;" data-bm="Mata" data-en="Points">Mata</div>
+                        </div>
+                    </div>
+                    <div id="profile-streak-display" style="text-align: center; margin-bottom: 16px; font-size: 13px; font-weight: 700; color: var(--warning-orange);">🔥 0 hari berturut-turut</div>
+
+                    <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px;" data-bm="🏆 Pencapaian" data-en="🏆 Achievements">🏆 Pencapaian</h3>
+
+                    <div id="achievements-list">
+                        <!-- Dynamically populated -->
+                    </div>
+                    <div style="text-align: center; padding: 24px 0 8px;">
+                        <button onclick="app.resetAllData()" style="background: none; border: 1px solid #E0E0E0; border-radius: 8px; padding: 8px 16px; font-size: 12px; color: #CCC; cursor: pointer;" data-bm="🗑 Reset Semua Data" data-en="🗑 Reset All Data">🗑 Reset Semua Data</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="app.switchTab('home')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Utama" data-en="Home">Utama</span>
+                </div>
+                <div class="nav-item" onclick="app.switchTab('my-projects')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Projek" data-en="Projects">Projek</span>
+                </div>
+                <div class="nav-item" onclick="app.switchTab('help')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path></svg>
+                    <span style="margin-top: 4px;" data-bm="Bantuan" data-en="Help">Bantuan</span>
+                </div>
+                <div class="nav-item active" onclick="app.switchTab('profile')">
+                    <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span style="margin-top: 4px;" data-bm="Profil" data-en="Profile">Profil</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Detail Screen -->
+        <div id="project-detail" class="screen">
+            <div style="min-height: 100vh; background: #F9F9F9; padding-bottom: 100px;">
+                <div class="header header-primary">
+                    <button onclick="app.goBack()" style="background: rgba(0,0,0,0.15); border: none; cursor: pointer; padding: 8px 12px; border-radius: 8px; font-size: 16px; font-weight: 700; color: var(--sarawak-black);">← Balik</button>
+                    <h1 id="detail-title" style="flex: 1; font-size: 15px; font-weight: 900; margin-left: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Projek</h1>
+                    <span id="detail-difficulty" class="difficulty-badge difficulty-beginner" style="position: static; flex-shrink: 0;">BEGINNER</span>
+                </div>
+
+                <!-- Hero -->
+                <div id="detail-hero" style="height: 160px; background: linear-gradient(135deg, #F5F5F5 0%, #E0E0E0 100%); display: flex; align-items: center; justify-content: center; font-size: 80px;">💡</div>
+
+                <!-- Meta info -->
+                <div style="padding: 16px 20px; background: white; display: flex; gap: 20px; border-bottom: 1px solid #F0F0F0;">
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #555;">
+                        <span>⏱️</span><span id="detail-time">-</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #555;">
+                        <span>🔧</span><span id="detail-materials-count">-</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--success-green);">
+                        <span>✓</span><span data-bm="Selamat" data-en="Safe">Selamat</span>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div style="padding: 14px 20px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span id="detail-progress-text" style="font-size: 13px; font-weight: 700; color: var(--sarawak-red);">Langkah 1 daripada 6</span>
+                        <span id="detail-progress-pct" style="font-size: 13px; font-weight: 700; color: #666;">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="detail-progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div style="display: flex; background: white; border-bottom: 2px solid #F0F0F0; margin-bottom: 0;">
+                    <div id="tab-steps" class="detail-tab active" onclick="app.switchDetailTab('steps')">📋 Langkah</div>
+                    <div id="tab-materials" class="detail-tab" onclick="app.switchDetailTab('materials')">🔧 Bahan</div>
+                </div>
+
+                <!-- Steps Content -->
+                <div id="detail-steps-content" style="padding: 16px 20px;"></div>
+
+                <!-- Materials Content -->
+                <div id="detail-materials-content" style="padding: 16px 20px; display: none;"></div>
+
+                <!-- Action Button -->
+                <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); max-width: 428px; width: 100%; padding: 12px 20px 16px; background: white; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); z-index: 99;">
+                    <button id="detail-action-btn" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 15px;" onclick="app.completeCurrentStep()">
+                        ✓ Tandakan Langkah Selesai
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completion Certificate Modal -->
+        <div id="certificate-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9998; align-items: center; justify-content: center; padding: 20px;">
+            <div style="background: white; border-radius: 20px; padding: 32px 24px; max-width: 380px; width: 100%; text-align: center; border: 4px solid var(--sarawak-gold); box-shadow: 0 20px 60px rgba(0,0,0,0.4);">
+                <div style="font-size: 72px; margin-bottom: 8px;">🏆</div>
+                <div style="font-size: 11px; font-weight: 800; color: var(--sarawak-red); letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase;">Sarawak Maker-In-A-Box</div>
+                <h2 style="font-size: 20px; font-weight: 900; color: var(--sarawak-black); margin-bottom: 6px;" data-bm="Sijil Maker Lengkap!" data-en="Master Maker Certificate!">Sijil Maker Lengkap!</h2>
+                <p id="cert-name" style="font-size: 20px; font-weight: 800; color: var(--sarawak-red); margin-bottom: 12px;">Maker Sarawak</p>
+                <p style="font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.6;" data-bm="Tahniah! Anda telah berjaya menyiapkan kesemua 4 projek S-MIB. Anda kini seorang Maker Berdedikasi Sarawak!" data-en="Congratulations! You have successfully completed all 4 S-MIB projects. You are now a Dedicated Sarawak Maker!">
+                    Tahniah! Anda telah berjaya menyiapkan kesemua 4 projek S-MIB. Anda kini seorang Maker Berdedikasi Sarawak!
+                </p>
+                <div style="background: linear-gradient(135deg, var(--sarawak-gold) 0%, var(--sarawak-red) 100%); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                    <div id="cert-points" style="font-size: 30px; font-weight: 900; color: white;">800 XP</div>
+                    <div style="font-size: 12px; color: white; opacity: 0.9;" data-bm="Jumlah Mata Diperoleh" data-en="Total Points Earned">Jumlah Mata Diperoleh</div>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; padding: 14px;" onclick="document.getElementById('certificate-modal').style.display='none'">
+                    <span data-bm="Terima Kasih! 🙏" data-en="Thank You! 🙏">Terima Kasih! 🙏</span>
+                </button>
+            </div>
+        </div>
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script>
+        class SMIBApp {
+            constructor() {
+                this.currentLanguage = 'bm';
+                this.currentFilter = 'all';
+                this.currentOnboarding = 0;
+                this.previousScreen = 'home';
+                this.currentProjectId = null;
+                this.selectedAvatar = '🦅';
+                this.isEditingProfile = false;
+
+                this.onboardingData = [
+                    { emoji: '👨‍🔧', title: 'Jadilah Seorang Maker!', subtitle: 'Become a Maker!', desc: 'Bina projek STEM sebenar menggunakan bahan buangan di sekeliling anda.' },
+                    { emoji: '📱', title: 'Belajar Tanpa Internet', subtitle: 'Learn Offline!', desc: 'Muat turun projek sekali, belajar bila-bila masa, di mana sahaja — tiada data diperlukan.' },
+                    { emoji: '✨', title: 'Selamat Bereksperimen!', subtitle: 'Safe to Experiment!', desc: 'Gunakan bahagian buangan — tidak apa untuk gagal dan cuba lagi. Itulah cara belajar!' }
+                ];
+
+                this.projects = {
+                    'led-torch': {
+                        id: 'led-torch', emoji: '💡',
+                        title: 'Lampu Suluh LED', titleEN: 'LED Torch',
+                        difficulty: 'beginner', time: '30 min', category: 'electronics',
+                        points: 100,
+                        materials: [
+                            { name: '2x Bateri AA', nameEN: '2x AA Batteries' },
+                            { name: 'LED (warna apa-apa)', nameEN: 'LED bulb (any color)' },
+                            { name: 'Wayar elektrik (30cm)', nameEN: 'Electrical wire (30cm)' },
+                            { name: 'Tiub kadbod', nameEN: 'Cardboard tube' },
+                            { name: 'Pita pelekat', nameEN: 'Adhesive tape' }
+                        ],
+                        steps: [
+                            { title: 'Kumpul Bahan', titleEN: 'Gather Materials', desc: 'Kumpulkan 2 bateri AA, 1 LED, wayar, pita pelekat, dan tiub kadbod.', descEN: 'Collect 2 AA batteries, 1 LED, wire, tape, and a cardboard tube.', tip: 'Bateri lama dari kawalan jauh pun boleh digunakan!', tipEN: 'Old batteries from remote controls work too!' },
+                            { title: 'Sediakan Tiub', titleEN: 'Prepare the Tube', desc: 'Potong tiub kadbod supaya panjangnya sama dengan 2 bateri yang disusun.', descEN: 'Cut the cardboard tube to the length of 2 batteries placed end to end.', tip: 'Tiub kertas tisu tandas adalah saiz yang sempurna!', tipEN: 'A toilet paper roll is the perfect size!' },
+                            { title: 'Susun Bateri', titleEN: 'Arrange Batteries', desc: 'Masukkan kedua-dua bateri ke dalam tiub dengan kutub positif (+) menghadap ke hadapan.', descEN: 'Insert both batteries into the tube with positive (+) poles facing forward.', tip: 'Pastikan positif (+) dan negatif (-) sambung antara bateri!', tipEN: 'Make sure positive (+) connects to negative (-) between batteries!' },
+                            { title: 'Sediakan Wayar', titleEN: 'Prepare Wire', desc: 'Potong 2 kepingan wayar (15cm). Kupas 1cm penebat di setiap hujung.', descEN: 'Cut 2 pieces of wire (15cm each). Strip 1cm of insulation from each end.', tip: 'Gunakan pensel untuk membantu mengupas wayar dengan selamat.', tipEN: 'Use a pencil to help safely strip the wire.' },
+                            { title: 'Sambung LED', titleEN: 'Connect the LED', desc: 'Sambungkan wayar ke kaki LED. Kaki panjang (+) ke positif, kaki pendek (-) ke negatif.', descEN: 'Connect wires to LED legs. Long leg (+) to positive, short leg (-) to negative.', tip: 'Kaki LED yang panjang adalah positif (+). Ini sangat penting!', tipEN: 'The longer LED leg is positive (+). This is very important!' },
+                            { title: 'Uji Lampu Suluh!', titleEN: 'Test Your Torch!', desc: 'Sentuh kedua-dua hujung wayar ke terminal bateri. LED patut menyala!', descEN: 'Touch both wire ends to the battery terminals. The LED should light up!', tip: 'Jika tidak menyala, cuba tukar arah sambungan LED.', tipEN: 'If it does not light up, try reversing the LED connections.' }
+                        ]
+                    },
+                    'motor-generator': {
+                        id: 'motor-generator', emoji: '⚙️',
+                        title: 'Penjana Motor DC', titleEN: 'DC Motor Generator',
+                        difficulty: 'intermediate', time: '2 jam', category: 'mechanics',
+                        points: 200,
+                        materials: [
+                            { name: 'Motor DC (dari mainan lama)', nameEN: 'DC motor (from old toy)' },
+                            { name: '2x Bateri AA + pemegang', nameEN: '2x AA batteries + holder' },
+                            { name: '1x LED', nameEN: '1x LED' },
+                            { name: 'Wayar elektrik', nameEN: 'Electrical wire' },
+                            { name: 'Papan kadbod (tapak)', nameEN: 'Cardboard base' },
+                            { name: 'Pita pelekat kuat', nameEN: 'Strong adhesive tape' }
+                        ],
+                        steps: [
+                            { title: 'Cari Motor DC', titleEN: 'Find a DC Motor', desc: 'Cari motor DC dari mainan lama, kipas kecil atau pemacu CD rosak.', descEN: 'Find a DC motor from an old toy, small fan, or broken CD drive.', tip: 'Motor dari kereta kawalan jauh adalah yang terbaik!', tipEN: 'Motors from remote-control cars work best!' },
+                            { title: 'Sediakan Tapak', titleEN: 'Prepare the Base', desc: 'Gunakan papan kadbod tebal (20x15cm) sebagai tapak projek anda.', descEN: 'Use thick cardboard (20x15cm) as your project base.', tip: 'Penutup kotak kasut adalah pilihan yang bagus!', tipEN: 'A shoe box lid works great!' },
+                            { title: 'Pasang Motor', titleEN: 'Mount the Motor', desc: 'Lekatkan motor pada tapak kadbod menggunakan pita pelekat yang kuat.', descEN: 'Attach the motor to the cardboard base using strong tape.', tip: 'Pastikan aci motor boleh berputar dengan bebas!', tipEN: 'Make sure the motor shaft can spin freely!' },
+                            { title: 'Sambung Bateri', titleEN: 'Connect the Battery', desc: 'Sambungkan pemegang bateri ke wayar motor. Merah ke merah, hitam ke hitam.', descEN: 'Connect the battery holder wires to the motor. Red to red, black to black.', tip: 'Motor akan berputar bila bateri disambung!', tipEN: 'The motor should spin when the battery is connected!' },
+                            { title: 'Sambung LED Output', titleEN: 'Connect LED Output', desc: 'Sambungkan LED ke terminal output motor untuk menjana elektrik apabila motor diputar.', descEN: 'Connect an LED to the motor output terminals to generate electricity when spun.', tip: 'Putar aci motor secara manual — LED patut berkelip!', tipEN: 'Spin the motor shaft by hand — the LED should flicker!' },
+                            { title: 'Uji Penjana!', titleEN: 'Test the Generator!', desc: 'Putar motor dengan tangan. Lihat LED menyala apabila motor berputar!', descEN: 'Spin the motor by hand. Watch the LED light up as the motor turns!', tip: 'Lebih laju anda putar, lebih terang LED menyala!', tipEN: 'The faster you spin, the brighter the LED glows!' }
+                        ]
+                    },
+                    'solar-panel': {
+                        id: 'solar-panel', emoji: '☀️',
+                        title: 'Panel Solar DIY', titleEN: 'DIY Solar Panel',
+                        difficulty: 'advanced', time: '4 jam', category: 'solar',
+                        points: 350,
+                        materials: [
+                            { name: '4-6 keping CD lama', nameEN: '4-6 old CDs' },
+                            { name: 'Wayar kuprum nipis', nameEN: 'Thin copper wire' },
+                            { name: 'Voltmeter', nameEN: 'Voltmeter' },
+                            { name: 'Papan kayu/plywood (30x20cm)', nameEN: 'Wood/plywood board (30x20cm)' },
+                            { name: 'Gam (pistol gam)', nameEN: 'Glue (glue gun)' },
+                            { name: 'LED untuk ujian', nameEN: 'LED for testing' }
+                        ],
+                        steps: [
+                            { title: 'Kumpul CD Lama', titleEN: 'Collect Old CDs', desc: 'Kumpul 4-6 keping CD atau DVD lama. Lapisan perak pada CD bertindak sebagai sel solar.', descEN: 'Collect 4-6 old CDs or DVDs. The silver layer on CDs acts as a solar cell.', tip: 'CD yang lebih lama dan tebal bekerja lebih baik!', tipEN: 'Older and thicker CDs work better!' },
+                            { title: 'Sediakan Papan', titleEN: 'Prepare the Board', desc: 'Potong papan kayu (30x20cm). Ini adalah rangka panel solar anda.', descEN: 'Cut a wooden board (30x20cm). This is your solar panel frame.', tip: 'Kayu lapis nipis 5mm adalah pilihan yang baik.', tipEN: 'Thin 5mm plywood is a good choice.' },
+                            { title: 'Susun CD', titleEN: 'Arrange the CDs', desc: 'Susun CD dalam susunan 2x3 pada papan. Tandakan kedudukan setiap CD dengan pensel.', descEN: 'Arrange CDs in a 2x3 grid on the board. Mark each CD position with a pencil.', tip: 'Semua permukaan berkilat mesti menghadap ke atas!', tipEN: 'All shiny surfaces must face up!' },
+                            { title: 'Sambung Wayar Siri', titleEN: 'Connect Wires in Series', desc: 'Sambungkan wayar kuprum antara setiap CD secara siri (positif ke negatif ke positif seterusnya).', descEN: 'Connect copper wire between each CD in series (positive to negative to next positive).', tip: 'Gunakan pita penebat untuk semua sambungan wayar.', tipEN: 'Use insulation tape for all wire connections.' },
+                            { title: 'Lekat CD pada Papan', titleEN: 'Glue CDs to Board', desc: 'Gam CD pada papan mengikut susun atur yang ditanda. Biarkan kering 30 minit.', descEN: 'Glue CDs to the board following your marked layout. Allow 30 minutes to dry.', tip: 'Gam pistol panas (atau sejuk) adalah pilihan terbaik!', tipEN: 'A hot (or cold) glue gun is the best choice!' },
+                            { title: 'Uji Panel Solar!', titleEN: 'Test Your Solar Panel!', desc: 'Letakkan panel di bawah cahaya matahari langsung. Ukur voltan dengan voltmeter. Jangkakan 0.5-2V!', descEN: 'Place panel under direct sunlight. Measure voltage with voltmeter. Expect 0.5-2V!', tip: 'Sambung LED ke output untuk melihatnya menyala di bawah cahaya matahari!', tipEN: 'Connect an LED to the output to see it glow in sunlight!' }
+                        ]
+                    },
+                    'mini-fan': {
+                        id: 'mini-fan', emoji: '🌀',
+                        title: 'Kipas Mini DIY', titleEN: 'DIY Mini Fan',
+                        difficulty: 'intermediate', time: '1 jam', category: 'mechanics',
+                        points: 150,
+                        materials: [
+                            { name: 'Motor DC (dari mainan lama)', nameEN: 'DC motor (from old toy)' },
+                            { name: '2x Bateri AA + pemegang', nameEN: '2x AA batteries + holder' },
+                            { name: 'Kadbod tebal (untuk bilah)', nameEN: 'Thick cardboard (for blades)' },
+                            { name: 'Pita pelekat kuat', nameEN: 'Strong adhesive tape' },
+                            { name: 'Gunting', nameEN: 'Scissors' }
+                        ],
+                        steps: [
+                            { title: 'Potong Bilah Kipas', titleEN: 'Cut Fan Blades', desc: 'Potong 4 kepingan kadbod berbentuk segi empat (5x2cm) untuk dijadikan bilah kipas.', descEN: 'Cut 4 rectangular cardboard pieces (5x2cm) to use as fan blades.', tip: 'Pastikan semua bilah mempunyai saiz yang sama untuk keseimbangan!', tipEN: 'Make sure all blades are the same size for balance!' },
+                            { title: 'Bengkokkan Bilah', titleEN: 'Bend the Blades', desc: 'Bengkokkan setiap bilah sedikit pada satu hujung untuk mewujudkan sudut angin.', descEN: 'Bend each blade slightly at one end to create the wind angle.', tip: 'Sudut 30-45 darjah memberikan aliran udara terbaik.', tipEN: 'A 30-45 degree angle gives the best airflow.' },
+                            { title: 'Pasang Bilah pada Motor', titleEN: 'Attach Blades to Motor', desc: 'Lekatkan bilah kadbod secara sama rata di sekeliling aci motor menggunakan pita pelekat.', descEN: 'Attach the cardboard blades evenly around the motor shaft using adhesive tape.', tip: 'Kipas yang tidak seimbang akan bergetar kuat — ambil masa untuk meratakan!', tipEN: 'An unbalanced fan will vibrate heavily — take time to even it out!' },
+                            { title: 'Buat Tapak Kipas', titleEN: 'Make a Fan Stand', desc: 'Buat tapak mudah dari kadbod tebal supaya kipas boleh berdiri sendiri.', descEN: 'Make a simple thick cardboard stand so the fan can stand on its own.', tip: 'Gam pistol melekatkan tapak dengan lebih kukuh daripada pita.', tipEN: 'A glue gun makes a sturdier stand than tape.' },
+                            { title: 'Sambung Bateri', titleEN: 'Connect the Battery', desc: 'Sambungkan wayar pemegang bateri ke terminal motor. Merah ke merah, hitam ke hitam.', descEN: 'Connect the battery holder wires to the motor terminals. Red to red, black to black.', tip: 'Jika kipas berputar ke arah yang salah, tukar dua wayar!', tipEN: 'If the fan spins the wrong way, swap the two wires!' },
+                            { title: 'Uji Kipas anda!', titleEN: 'Test Your Fan!', desc: 'Masukkan bateri dan uji kipas anda. Rasa angin? Cuba tambah bilah atau ubah sudut untuk lebih banyak angin!', descEN: 'Insert batteries and test your fan. Feel the breeze? Try adding blades or changing the angle for more airflow!', tip: 'Lebih berat bilah, lebih perlahan kipas — guna kadbod nipis!', tipEN: 'Heavier blades = slower fan — use thin cardboard!' }
+                        ]
+                    }
+                };
+
+                this._loadState();
+                this._updateProfileDisplay();
+                this._updateStreak();
+                const splashDuration = this.state.name ? 900 : 2500;
+                setTimeout(() => {
+                    // Skip onboarding if returning user
+                    if (this.state.name) {
+                        this.switchTab('home');
+                    } else {
+                        this.showScreen('onboarding');
+                    }
+                }, splashDuration);
+            }
+
+            // ─── Storage ─────────────────────────────────────────────────
+
+            _loadState() {
+                try {
+                    const saved = localStorage.getItem('smib_state');
+                    this.state = saved ? JSON.parse(saved) : { progress: {}, completed: [], points: 0, name: '', avatar: '🦅' };
+                    if (!this.state.name) this.state.name = '';
+                    if (!this.state.avatar) this.state.avatar = '🦅';
+                } catch(e) {
+                    this.state = { progress: {}, completed: [], points: 0, name: '', avatar: '🦅' };
+                }
+                if (!this.state.streak) this.state.streak = 0;
+                if (!this.state.lastOpenDate) this.state.lastOpenDate = '';
+                if (!this.state.earnedAchievements) this.state.earnedAchievements = [];
+                if (!this.state.certificateShown) this.state.certificateShown = false;
+            }
+
+            _saveState() {
+                try { localStorage.setItem('smib_state', JSON.stringify(this.state)); } catch(e) {}
+            }
+
+            // ─── Navigation ───────────────────────────────────────────────
+
+            showScreen(id) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+            }
+
+            switchTab(tab) {
+                this.previousScreen = tab;
+                this.showScreen(tab);
+                // Fix nav active state dynamically across all screens
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    const oc = item.getAttribute('onclick') || '';
+                    item.classList.toggle('active', oc.includes(`'${tab}'`));
+                });
+                if (tab === 'home') { this._updateProfileDisplay(); this._updateHomeCards(); }
+                if (tab === 'my-projects') this._renderMyProjects();
+                if (tab === 'profile') this._renderProfile();
+            }
+
+            goBack() {
+                this.showScreen(this.previousScreen || 'home');
+            }
+
+            // ─── Onboarding ───────────────────────────────────────────────
+
+            nextOnboarding() {
+                if (this.currentOnboarding < 2) {
+                    this.currentOnboarding++;
+                    const d = this.onboardingData[this.currentOnboarding];
+                    document.getElementById('onboarding-emoji').textContent = d.emoji;
+                    document.getElementById('onboarding-title').textContent = d.title;
+                    document.getElementById('onboarding-subtitle').textContent = d.subtitle;
+                    document.getElementById('onboarding-desc').textContent = d.desc;
+                    document.querySelectorAll('.onboarding-dot').forEach((dot, i) => {
+                        dot.style.background = i === this.currentOnboarding ? 'var(--sarawak-gold)' : '#E0E0E0';
+                    });
+                } else {
+                    if (this.state.name) {
+                        this.switchTab('home');
+                    } else {
+                        this.showScreen('profile-setup');
+                    }
+                }
+            }
+
+            // ─── Profile Setup ────────────────────────────────────────────
+
+            selectAvatar(avatar, el) {
+                this.selectedAvatar = avatar;
+                document.querySelectorAll('.avatar-option').forEach(a => a.classList.remove('active'));
+                el.classList.add('active');
+            }
+
+            submitProfile() {
+                const input = document.getElementById('profile-name-input');
+                const name = input.value.trim();
+                if (!name) {
+                    input.focus();
+                    input.style.borderColor = 'var(--sarawak-red)';
+                    setTimeout(() => input.style.borderColor = '', 1500);
+                    return;
+                }
+                const wasEditing = this.isEditingProfile;
+                this.state.name = name;
+                this.state.avatar = this.selectedAvatar;
+                this.isEditingProfile = false;
+                const skipBtn = document.getElementById('profile-skip-btn');
+                if (skipBtn) skipBtn.textContent = 'Langkau / Skip';
+                this._saveState();
+                this._updateProfileDisplay();
+                if (wasEditing) {
+                    this.switchTab('profile');
+                } else {
+                    this.switchTab('home');
+                    this.showToast(`Selamat datang, ${name}! 🎉`);
+                }
+            }
+
+            skipProfile() {
+                if (this.isEditingProfile) {
+                    this.isEditingProfile = false;
+                    const skipBtn = document.getElementById('profile-skip-btn');
+                    if (skipBtn) skipBtn.textContent = 'Langkau / Skip';
+                    this.switchTab('profile');
+                    return;
+                }
+                this.state.name = 'Maker Sarawak';
+                this.state.avatar = '🦅';
+                this._saveState();
+                this._updateProfileDisplay();
+                this.switchTab('home');
+            }
+
+            _updateProfileDisplay() {
+                const name = this.state.name || 'Maker Sarawak';
+                const avatar = this.state.avatar || '🦅';
+                const nameEl = document.getElementById('profile-name-display');
+                const avatarEl = document.getElementById('profile-avatar-display');
+                const welcomeEl = document.getElementById('home-welcome-text');
+                if (nameEl) nameEl.textContent = name;
+                if (avatarEl) avatarEl.textContent = avatar;
+                if (welcomeEl) {
+                    const greeting = this._getGreeting();
+                    welcomeEl.setAttribute('data-bm', `${greeting.bm}, ${name}! 👋`);
+                    welcomeEl.setAttribute('data-en', `${greeting.en}, ${name}! 👋`);
+                    welcomeEl.textContent = this.currentLanguage === 'en' ? `${greeting.en}, ${name}! 👋` : `${greeting.bm}, ${name}! 👋`;
+                }
+            }
+
+            // ─── Home Card Progress ───────────────────────────────────────
+
+            _updateHomeCards() {
+                const lang = this.currentLanguage;
+
+                // Update Quick Start card
+                const qsStatus = document.getElementById('quickstart-status');
+                const qsBtn = document.getElementById('quickstart-btn');
+                if (qsStatus && qsBtn) {
+                    const prog = this.state.progress['led-torch'];
+                    const isComplete = this.state.completed.includes('led-torch');
+                    const inProgress = prog && prog.currentStep > 0 && !isComplete;
+                    if (isComplete) {
+                        qsStatus.innerHTML = `<span class="card-status-tag card-status-done">${lang === 'en' ? '✅ Completed — 100 XP earned' : '✅ Selesai — 100 mata diperoleh'}</span>`;
+                        qsBtn.className = 'btn btn-secondary';
+                        qsBtn.querySelector('span').setAttribute('data-bm', '👁 Lihat Semula');
+                        qsBtn.querySelector('span').setAttribute('data-en', '👁 View Again');
+                        qsBtn.querySelector('span').textContent = lang === 'en' ? '👁 View Again' : '👁 Lihat Semula';
+                    } else if (inProgress) {
+                        const pct = Math.round((prog.currentStep / 6) * 100);
+                        qsStatus.innerHTML = `<span class="card-status-tag card-status-inprogress">${lang === 'en' ? `▶ In Progress — ${pct}%` : `▶ Sedang Berjalan — ${pct}%`}</span>`;
+                        qsBtn.className = 'btn btn-primary';
+                        qsBtn.querySelector('span').setAttribute('data-bm', '▶ Teruskan');
+                        qsBtn.querySelector('span').setAttribute('data-en', '▶ Continue');
+                        qsBtn.querySelector('span').textContent = lang === 'en' ? '▶ Continue' : '▶ Teruskan';
+                    } else {
+                        qsStatus.innerHTML = '';
+                        qsBtn.className = 'btn btn-primary';
+                        qsBtn.querySelector('span').setAttribute('data-bm', '🚀 Mula Sekarang');
+                        qsBtn.querySelector('span').setAttribute('data-en', '🚀 Start Now');
+                        qsBtn.querySelector('span').textContent = lang === 'en' ? '🚀 Start Now' : '🚀 Mula Sekarang';
+                    }
+                }
+
+                // Update All Projects cards
+                document.querySelectorAll('#home .card-progress-area').forEach(area => {
+                    const card = area.closest('[data-project-id]');
+                    if (!card) return;
+                    const id = card.dataset.projectId;
+                    if (id === 'led-torch') return; // handled above
+                    const prog = this.state.progress[id];
+                    const isComplete = this.state.completed.includes(id);
+                    const project = this.projects[id];
+                    if (!project) return;
+                    const totalSteps = project.steps.length;
+
+                    if (isComplete) {
+                        area.innerHTML = `<span class="card-status-tag card-status-done">${lang === 'en' ? `✅ Completed — ${project.points} XP` : `✅ Selesai — ${project.points} mata`}</span>`;
+                    } else if (prog && prog.currentStep > 0) {
+                        const pct = Math.round((prog.currentStep / totalSteps) * 100);
+                        area.innerHTML = `
+                            <span class="card-status-tag card-status-inprogress" style="margin-bottom: 6px; display: block;">${lang === 'en' ? `▶ In Progress — Step ${prog.currentStep}/${totalSteps}` : `▶ Langkah ${prog.currentStep}/${totalSteps}`}</span>
+                            <div class="progress-bar" style="height: 5px;"><div class="progress-fill" style="width: ${pct}%;"></div></div>`;
+                    } else {
+                        area.innerHTML = '';
+                    }
+                });
+
+                // Smart recommendation badge
+                const rec = this._getRecommendedProject();
+                document.querySelectorAll('#home .project-card[data-project-id]').forEach(card => {
+                    const existing = card.querySelector('.rec-badge');
+                    if (existing) existing.remove();
+                    if (rec && card.dataset.projectId === rec && !this.state.completed.includes(rec)) {
+                        const badge = document.createElement('span');
+                        badge.className = 'rec-badge';
+                        badge.style.cssText = 'display:inline-block;background:var(--info-blue);color:white;font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;margin-bottom:6px;';
+                        badge.textContent = this.currentLanguage === 'en' ? '⭐ RECOMMENDED' : '⭐ DICADANGKAN';
+                        card.querySelector('.card-progress-area').prepend(badge);
+                    }
+                });
+            }
+
+            // ─── Level System ─────────────────────────────────────────────
+
+            _getLevel(points) {
+                if (points >= 800) return { level: 5, titleBM: 'Legenda', titleEN: 'Legend', next: null, prevThreshold: 800 };
+                if (points >= 500) return { level: 4, titleBM: 'Expert', titleEN: 'Expert', next: 800, prevThreshold: 500 };
+                if (points >= 250) return { level: 3, titleBM: 'Mahir', titleEN: 'Skilled', next: 500, prevThreshold: 250 };
+                if (points >= 100) return { level: 2, titleBM: 'Muda', titleEN: 'Junior', next: 250, prevThreshold: 100 };
+                return { level: 1, titleBM: 'Baru', titleEN: 'Newbie', next: 100, prevThreshold: 0 };
+            }
+
+            _getGreeting() {
+                const h = new Date().getHours();
+                if (h < 12) return { bm: 'Selamat Pagi', en: 'Good Morning' };
+                if (h < 17) return { bm: 'Selamat Petang', en: 'Good Afternoon' };
+                return { bm: 'Selamat Malam', en: 'Good Evening' };
+            }
+
+            _getRecommendedProject() {
+                const completed = this.state.completed;
+                const candidates = ['motor-generator', 'mini-fan', 'solar-panel'];
+                // Prefer not-started over in-progress over most-progressed
+                const notStarted = candidates.filter(id => !completed.includes(id) && (!this.state.progress[id] || this.state.progress[id].currentStep === 0));
+                if (notStarted.length > 0) return notStarted[0];
+                const inProgress = candidates.filter(id => !completed.includes(id));
+                return inProgress.length > 0 ? inProgress[0] : null;
+            }
+
+            _getAchievementDefs() {
+                const completedCount = this.state.completed.length;
+                return [
+                    { id: 'first',       emoji: '🌟', titleBM: 'Projek Pertama!',      titleEN: 'First Project!',        descBM: 'Siapkan mana-mana 1 projek',          descEN: 'Complete any 1 project',              hintBM: 'Mulakan projek pertama anda!',              hintEN: 'Start your first project!',             condition: () => completedCount >= 1 },
+                    { id: 'electrician', emoji: '⚡', titleBM: 'Juruteknik Elektrik',   titleEN: 'Electrician',           descBM: 'Siapkan Lampu Suluh LED',              descEN: 'Complete the LED Torch project',       hintBM: 'Siapkan Lampu Suluh LED',                  hintEN: 'Complete the LED Torch project',        condition: () => this.state.completed.includes('led-torch') },
+                    { id: 'mechanic',    emoji: '⚙️', titleBM: 'Jurutera Mekanikal',   titleEN: 'Mechanical Engineer',   descBM: 'Siapkan projek mekanikal',             descEN: 'Complete a mechanics project',         hintBM: 'Siapkan Motor Generator atau Kipas Mini',  hintEN: 'Complete Motor Generator or Mini Fan',  condition: () => this.state.completed.includes('motor-generator') || this.state.completed.includes('mini-fan') },
+                    { id: 'eco',         emoji: '♻️', titleBM: 'Pejuang Eko',          titleEN: 'Eco Warrior',           descBM: 'Siapkan Panel Solar DIY',              descEN: 'Complete the DIY Solar Panel',         hintBM: 'Siapkan projek Panel Solar',               hintEN: 'Complete the Solar Panel project',      condition: () => this.state.completed.includes('solar-panel') },
+                    { id: 'all4',        emoji: '🔥', titleBM: 'Maker Berdedikasi',     titleEN: 'Dedicated Maker',       descBM: 'Siapkan semua 4 projek',               descEN: 'Complete all 4 projects',              hintBM: 'Siapkan kesemua 4 projek!',                hintEN: 'Complete all 4 projects!',              condition: () => completedCount >= 4 }
+                ];
+            }
+
+            _updateStreak() {
+                const today = new Date().toDateString();
+                if (this.state.lastOpenDate === today) return; // Already counted today
+                const last = this.state.lastOpenDate ? new Date(this.state.lastOpenDate) : null;
+                const now = new Date(today);
+                const daysDiff = last ? Math.round((now - last) / (1000 * 60 * 60 * 24)) : 999;
+                this.state.streak = (daysDiff <= 1) ? (this.state.streak + 1) : 1;
+                this.state.lastOpenDate = today;
+                this._saveState();
+            }
+
+            // ─── Confetti ─────────────────────────────────────────────────
+
+            _showConfetti() {
+                const colors = ['#FFD700', '#D4411F', '#43A047', '#2196F3', '#FF6F00', '#ffffff', '#FF4081'];
+                const container = document.getElementById('app-container');
+                for (let i = 0; i < 70; i++) {
+                    const piece = document.createElement('div');
+                    piece.className = 'confetti-piece';
+                    const isCircle = Math.random() > 0.5;
+                    const size = 6 + Math.random() * 8;
+                    const duration = 1.8 + Math.random() * 2;
+                    const delay = Math.random() * 0.6;
+                    const left = Math.random() * 100;
+                    const drift = (Math.random() - 0.5) * 160;
+                    piece.style.cssText = `
+                        left: ${left}%; top: -20px;
+                        width: ${size}px; height: ${size}px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        border-radius: ${isCircle ? '50%' : '2px'};
+                        animation: confetti-fall ${duration}s ease-in ${delay}s forwards;
+                        --drift: ${drift}px;
+                    `;
+                    container.appendChild(piece);
+                    setTimeout(() => piece.remove(), (duration + delay + 0.5) * 1000);
+                }
+            }
+
+            // ─── Reset Project ────────────────────────────────────────────
+
+            resetProject(id) {
+                const lang = this.currentLanguage;
+                const project = this.projects[id];
+                if (!project) return;
+                const msg = lang === 'en'
+                    ? `Reset "${project.titleEN}"? All progress and points will be lost.`
+                    : `Reset "${project.title}"? Semua kemajuan dan mata akan hilang.`;
+                if (!confirm(msg)) return;
+                const wasCompleted = this.state.completed.includes(id);
+                delete this.state.progress[id];
+                const idx = this.state.completed.indexOf(id);
+                if (idx !== -1) {
+                    this.state.completed.splice(idx, 1);
+                    this.state.points = Math.max(0, this.state.points - project.points);
+                }
+                this._saveState();
+                this._renderMyProjects();
+                this.showToast(lang === 'en' ? '🔄 Project reset!' : '🔄 Projek telah direset!');
+            }
+
+            // ─── Edit Profile ─────────────────────────────────────────────
+
+            editProfile() {
+                this.isEditingProfile = true;
+                this.selectedAvatar = this.state.avatar || '🦅';
+                this.showScreen('profile-setup');
+                setTimeout(() => {
+                    const input = document.getElementById('profile-name-input');
+                    if (input) input.value = this.state.name || '';
+                    document.querySelectorAll('.avatar-option').forEach(a => {
+                        a.classList.toggle('active', a.dataset.avatar === this.selectedAvatar);
+                    });
+                    const skipBtn = document.getElementById('profile-skip-btn');
+                    if (skipBtn) skipBtn.textContent = 'Batal / Cancel';
+                }, 50);
+            }
+
+            // ─── Language ─────────────────────────────────────────────────
+
+            switchLanguage(lang) {
+                this.currentLanguage = lang;
+                // Update all BM/EN toggle buttons across all screens
+                document.querySelectorAll('.lang-btn-bm, #lang-bm').forEach(el => el.classList.toggle('active', lang === 'bm'));
+                document.querySelectorAll('.lang-btn-en, #lang-en').forEach(el => el.classList.toggle('active', lang === 'en'));
+
+                const attr = lang === 'bm' ? 'data-bm' : 'data-en';
+                document.querySelectorAll('[data-bm]').forEach(el => {
+                    el.textContent = el.getAttribute(attr);
+                });
+
+                // Re-render dynamic screens if active
+                if (document.getElementById('my-projects').classList.contains('active')) this._renderMyProjects();
+                if (document.getElementById('profile').classList.contains('active')) this._renderProfile();
+                if (document.getElementById('project-detail').classList.contains('active') && this.currentProjectId) {
+                    this._renderProjectDetail(this.projects[this.currentProjectId]);
+                }
+                this._updateHomeCards();
+                this.showToast(lang === 'bm' ? 'Bahasa ditukar ke Bahasa Malaysia MY' : 'Language switched to English UK');
+            }
+
+            // ─── Filters ─────────────────────────────────────────────────
+
+            filterProjects(category, btn) {
+                this.currentFilter = category;
+
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = 'white';
+                    b.style.color = '#666';
+                    b.style.border = '2px solid #E0E0E0';
+                });
+                btn.classList.add('active');
+                btn.style.background = 'linear-gradient(135deg, var(--sarawak-gold) 0%, var(--sarawak-red) 100%)';
+                btn.style.color = 'white';
+                btn.style.border = '2px solid var(--sarawak-gold)';
+
+                document.querySelectorAll('#home .project-card[data-category]').forEach(card => {
+                    const match = category === 'all' || card.dataset.category === category;
+                    card.classList.toggle('project-hidden', !match);
+                });
+            }
+
+            // ─── Project Detail ───────────────────────────────────────────
+
+            openProject(projectId) {
+                const project = this.projects[projectId];
+                if (!project) return;
+
+                this.currentProjectId = projectId;
+
+                // Ensure progress entry exists
+                if (!this.state.progress[projectId]) {
+                    this.state.progress[projectId] = { currentStep: 0, checkedMaterials: [] };
+                    this._saveState();
+                }
+
+                this._renderProjectDetail(project);
+                this.showScreen('project-detail');
+                this.switchDetailTab('steps');
+            }
+
+            _renderProjectDetail(project) {
+                const lang = this.currentLanguage;
+                const title = lang === 'en' ? project.titleEN : project.title;
+                const progress = this.state.progress[project.id];
+                const totalSteps = project.steps.length;
+                const currentStep = Math.min(progress.currentStep, totalSteps);
+                const isCompleted = this.state.completed.includes(project.id);
+                const pct = Math.round((currentStep / totalSteps) * 100);
+
+                document.getElementById('detail-title').textContent = title;
+                document.getElementById('detail-hero').textContent = project.emoji;
+                const heroBg = {
+                    'electronics': 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+                    'mechanics':   'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
+                    'solar':       'linear-gradient(135deg, #FFFDE7 0%, #FFF9C4 100%)'
+                }[project.category] || 'linear-gradient(135deg, #F5F5F5 0%, #E0E0E0 100%)';
+                document.getElementById('detail-hero').style.background = heroBg;
+                document.getElementById('detail-time').textContent = project.time;
+                document.getElementById('detail-materials-count').textContent = project.materials.length + (lang === 'en' ? ' items' : ' bahan');
+
+                const diffBadge = document.getElementById('detail-difficulty');
+                diffBadge.textContent = project.difficulty.toUpperCase();
+                diffBadge.className = `difficulty-badge difficulty-${project.difficulty}`;
+                diffBadge.style.position = 'static';
+
+                document.getElementById('detail-progress-text').textContent =
+                    lang === 'en'
+                        ? (isCompleted ? '✅ Completed!' : `Step ${currentStep} of ${totalSteps}`)
+                        : (isCompleted ? '✅ Selesai!' : `Langkah ${currentStep} daripada ${totalSteps}`);
+                document.getElementById('detail-progress-pct').textContent = pct + '%';
+                document.getElementById('detail-progress-fill').style.width = pct + '%';
+
+                // Action button
+                const actionBtn = document.getElementById('detail-action-btn');
+                if (isCompleted) {
+                    actionBtn.textContent = lang === 'en' ? '🏆 Project Completed!' : '🏆 Projek Selesai!';
+                    actionBtn.disabled = true;
+                    actionBtn.style.opacity = '0.7';
+                } else {
+                    actionBtn.textContent = lang === 'en' ? '✓ Mark Step Complete' : '✓ Tandakan Langkah Selesai';
+                    actionBtn.disabled = false;
+                    actionBtn.style.opacity = '1';
+                }
+
+                // Render steps
+                const stepsContainer = document.getElementById('detail-steps-content');
+                const helpHint = !isCompleted
+                    ? `<div style="text-align: right; margin-bottom: 10px;">
+                        <span onclick="app.openHelpFromProject()" style="font-size: 12px; color: var(--info-blue); cursor: pointer; font-weight: 600;">
+                            💡 ${lang === 'en' ? 'Stuck? View Help' : 'Tersekat? Lihat Bantuan'}
+                        </span>
+                       </div>` : '';
+                stepsContainer.innerHTML = helpHint + project.steps.map((step, i) => {
+                    const stepTitle = lang === 'en' ? step.titleEN : step.title;
+                    const stepDesc = lang === 'en' ? step.descEN : step.desc;
+                    const stepTip = lang === 'en' ? step.tipEN : step.tip;
+                    const isDone = i < currentStep;
+                    const isCurrent = i === currentStep && !isCompleted;
+                    const cls = isDone ? 'done' : (isCurrent ? 'current' : '');
+                    const numBg = isDone ? 'var(--success-green)' : (isCurrent ? 'var(--sarawak-gold)' : '#E0E0E0');
+                    const numColor = isDone || isCurrent ? (isDone ? 'white' : 'var(--sarawak-black)') : '#999';
+                    const numText = isDone ? '✓' : (i + 1);
+
+                    return `<div class="step-item ${cls}">
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            <div class="step-number" style="background: ${numBg}; color: ${numColor};">${numText}</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px; color: ${isCurrent ? 'var(--sarawak-black)' : '#555'};">${stepTitle}</div>
+                                ${isCurrent || isDone ? `<p style="font-size: 13px; color: #666; line-height: 1.5; margin-bottom: 6px;">${stepDesc}</p>
+                                <div class="tip-box">💡 ${stepTip}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                // Render materials
+                const matsContainer = document.getElementById('detail-materials-content');
+                const checked = progress.checkedMaterials || [];
+                matsContainer.innerHTML = `
+                    <p style="font-size: 13px; color: #666; margin-bottom: 16px;" >${lang === 'en' ? 'Tick off each item as you gather it:' : 'Tandakan setiap bahan apabila anda mengumpulnya:'}</p>
+                    ${project.materials.map((mat, i) => {
+                        const matName = lang === 'en' ? mat.nameEN : mat.name;
+                        const isChecked = checked.includes(i);
+                        return `<div class="material-item">
+                            <div class="material-check ${isChecked ? 'checked' : ''}" onclick="app.toggleMaterial('${project.id}', ${i}, this)">
+                                ${isChecked ? '✓' : ''}
+                            </div>
+                            <span style="font-size: 14px; font-weight: 600; color: ${isChecked ? '#999' : 'var(--sarawak-black)'}; text-decoration: ${isChecked ? 'line-through' : 'none'};">${matName}</span>
+                        </div>`;
+                    }).join('')}
+                    <div style="margin-top: 16px; padding: 12px; background: #FFF9E6; border-radius: 8px; text-align: center; font-size: 13px; font-weight: 700; color: var(--warning-orange);">
+                        ${checked.length}/${project.materials.length} ${lang === 'en' ? 'items collected' : 'bahan dikumpul'}
+                    </div>`;
+            }
+
+            switchDetailTab(tab) {
+                document.getElementById('detail-steps-content').style.display = tab === 'steps' ? 'block' : 'none';
+                document.getElementById('detail-materials-content').style.display = tab === 'materials' ? 'block' : 'none';
+                document.getElementById('tab-steps').classList.toggle('active', tab === 'steps');
+                document.getElementById('tab-materials').classList.toggle('active', tab === 'materials');
+            }
+
+            openHelpFromProject() {
+                // Show help without overwriting previousScreen so ← Balik still works
+                this.showScreen('help');
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    const oc = item.getAttribute('onclick') || '';
+                    item.classList.toggle('active', oc.includes("'help'"));
+                });
+            }
+
+            completeCurrentStep() {
+                const project = this.projects[this.currentProjectId];
+                if (!project) return;
+
+                const progress = this.state.progress[this.currentProjectId];
+                const totalSteps = project.steps.length;
+
+                if (progress.currentStep >= totalSteps) return;
+
+                progress.currentStep++;
+                this._saveState();
+
+                if (progress.currentStep >= totalSteps) {
+                    // Project completed!
+                    if (!this.state.completed.includes(this.currentProjectId)) {
+                        this.state.completed.push(this.currentProjectId);
+                        this.state.points += project.points;
+                        this._saveState();
+                        this._showConfetti();
+                        this.showToast(`🏆 Tahniah! +${project.points} mata!`);
+                        setTimeout(() => this._checkAchievements(), 500);
+                    }
+                } else {
+                    const lang = this.currentLanguage;
+                    this.showToast(lang === 'en'
+                        ? `Step ${progress.currentStep} done! ✓`
+                        : `Langkah ${progress.currentStep} selesai! ✓`);
+                }
+
+                this._renderProjectDetail(project);
+                // Flash the newly completed step and scroll to current
+                setTimeout(() => {
+                    const doneSteps = document.querySelectorAll('.step-item.done');
+                    if (doneSteps.length > 0) {
+                        const last = doneSteps[doneSteps.length - 1];
+                        last.style.animation = 'stepDone 0.5s ease-out';
+                        setTimeout(() => { last.style.animation = ''; }, 550);
+                    }
+                    const cur = document.querySelector('.step-item.current');
+                    if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 50);
+            }
+
+            toggleMaterial(projectId, index, el) {
+                const progress = this.state.progress[projectId];
+                if (!progress) return;
+                if (!progress.checkedMaterials) progress.checkedMaterials = [];
+
+                const i = progress.checkedMaterials.indexOf(index);
+                if (i === -1) {
+                    progress.checkedMaterials.push(index);
+                    el.classList.add('checked');
+                    el.textContent = '✓';
+                } else {
+                    progress.checkedMaterials.splice(i, 1);
+                    el.classList.remove('checked');
+                    el.textContent = '';
+                }
+                this._saveState();
+
+                // Update the count display
+                this._renderProjectDetail(this.projects[projectId]);
+                this.switchDetailTab('materials');
+            }
+
+            // ─── My Projects ──────────────────────────────────────────────
+
+            _renderMyProjects() {
+                const list = document.getElementById('my-projects-list');
+                const noMsg = document.getElementById('no-projects-msg');
+                const lang = this.currentLanguage;
+
+                const startedIds = Object.keys(this.state.progress).filter(id =>
+                    this.state.progress[id] && (this.state.progress[id].currentStep > 0 || this.state.completed.includes(id))
+                );
+
+                if (startedIds.length === 0) {
+                    list.innerHTML = '';
+                    noMsg.style.display = 'block';
+                    document.getElementById('projects-count-badge').textContent = '0 ' + (lang === 'en' ? 'Total' : 'Jumlah');
+                    return;
+                }
+
+                noMsg.style.display = 'none';
+                document.getElementById('projects-count-badge').textContent = startedIds.length + ' ' + (lang === 'en' ? 'Total' : 'Jumlah');
+
+                list.innerHTML = startedIds.map(id => {
+                    const project = this.projects[id];
+                    if (!project) return '';
+                    const progress = this.state.progress[id];
+                    const isCompleted = this.state.completed.includes(id);
+                    const totalSteps = project.steps.length;
+                    const currentStep = progress.currentStep;
+                    const pct = Math.round((currentStep / totalSteps) * 100);
+                    const title = lang === 'en' ? project.titleEN : project.title;
+
+                    return `<div class="card">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <div style="font-size: 40px;">${project.emoji}</div>
+                            <div style="flex: 1;">
+                                <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 4px;">${title}</h4>
+                                <p style="font-size: 12px; color: ${isCompleted ? 'var(--success-green)' : 'var(--warning-orange)'}; font-weight: 600;">
+                                    ${isCompleted
+                                        ? (lang === 'en' ? `✅ Completed — ${project.points} XP` : `✅ Selesai — ${project.points} mata`)
+                                        : (lang === 'en' ? `▶ Step ${currentStep} of ${totalSteps}` : `▶ Langkah ${currentStep} daripada ${totalSteps}`)}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="progress-bar" style="margin-bottom: 12px;">
+                            <div class="progress-fill" style="width: ${pct}%;"></div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn ${isCompleted ? 'btn-secondary' : 'btn-primary'}" style="flex: 1;" onclick="app.openProject('${id}')">
+                                ${isCompleted
+                                    ? (lang === 'en' ? '👁 View' : '👁 Lihat')
+                                    : (lang === 'en' ? '▶ Continue' : '▶ Teruskan')}
+                            </button>
+                            <button class="btn btn-secondary" style="padding: 12px 14px; color: #999; border-color: #E0E0E0;" onclick="app.resetProject('${id}')" title="${lang === 'en' ? 'Reset project' : 'Reset projek'}">
+                                🔄
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            // ─── Profile ─────────────────────────────────────────────────
+
+            _renderProfile() {
+                const lang = this.currentLanguage;
+                const completedCount = this.state.completed.length;
+                const points = this.state.points;
+
+                const nameEl = document.getElementById('profile-name-display');
+                const avatarEl = document.getElementById('profile-avatar-display');
+                if (nameEl) nameEl.textContent = this.state.name || 'Maker Sarawak';
+                if (avatarEl) avatarEl.textContent = this.state.avatar || '🦅';
+
+                // Level system
+                const lv = this._getLevel(points);
+                const lvTitle = lang === 'en' ? lv.titleEN : lv.titleBM;
+                const lvBadge = document.getElementById('profile-level-badge');
+                const lvBar = document.getElementById('profile-xp-bar');
+                const lvText = document.getElementById('profile-xp-text');
+                if (lvBadge) lvBadge.textContent = `⚡ Level ${lv.level} — ${lvTitle}`;
+                if (lvBar) {
+                    const pct = lv.next ? Math.round(((points - lv.prevThreshold) / (lv.next - lv.prevThreshold)) * 100) : 100;
+                    lvBar.style.width = pct + '%';
+                }
+                if (lvText) {
+                    lvText.textContent = lv.next
+                        ? `${points} / ${lv.next} XP`
+                        : (lang === 'en' ? `${points} XP — MAX LEVEL!` : `${points} XP — TAHAP MAKSIMUM!`);
+                }
+
+                document.getElementById('stat-projects').textContent = completedCount;
+                document.getElementById('stat-points').textContent = points;
+
+                const streakEl = document.getElementById('profile-streak-display');
+                if (streakEl) {
+                    const s = this.state.streak || 0;
+                    streakEl.textContent = lang === 'en'
+                        ? `🔥 ${s} day streak`
+                        : `🔥 ${s} hari berturut-turut`;
+                }
+
+                const achievementDefs = this._getAchievementDefs();
+
+                const earned = achievementDefs.filter(a => a.condition());
+                document.getElementById('stat-badges').textContent = earned.length;
+
+                const achList = document.getElementById('achievements-list');
+                achList.innerHTML = achievementDefs.map(a => {
+                    const isEarned = a.condition();
+                    if (isEarned) {
+                        return `<div class="achievement-card">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="font-size: 44px;">${a.emoji}</div>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 15px; margin-bottom: 2px;">${lang === 'en' ? a.titleEN : a.titleBM}</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">${lang === 'en' ? a.descEN : a.descBM}</div>
+                                    <div style="font-size: 11px; font-weight: 700; margin-top: 4px;">✅ ${lang === 'en' ? 'Earned!' : 'Diperoleh!'}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    } else {
+                        return `<div class="achievement-locked">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="font-size: 36px; filter: grayscale(1);">${a.emoji}</div>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 14px; color: #888; margin-bottom: 2px;">🔒 ${lang === 'en' ? a.titleEN : a.titleBM}</div>
+                                    <div style="font-size: 12px; color: #AAA;">${lang === 'en' ? a.hintEN : a.hintBM}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }
+                }).join('');
+            }
+
+            _checkAchievements() {
+                const lang = this.currentLanguage;
+                const defs = this._getAchievementDefs();
+                const prevEarned = this.state.earnedAchievements || [];
+                const nowEarned = defs.filter(a => a.condition()).map(a => a.id);
+                const newlyEarned = nowEarned.filter(id => !prevEarned.includes(id));
+                if (newlyEarned.length > 0) {
+                    this.state.earnedAchievements = nowEarned;
+                    this._saveState();
+                    newlyEarned.forEach((id, i) => {
+                        const a = defs.find(x => x.id === id);
+                        if (a) setTimeout(() => {
+                            this.showToast(`${a.emoji} ${lang === 'en' ? a.titleEN : a.titleBM} ${lang === 'en' ? 'unlocked!' : 'dibuka!'}`);
+                        }, 1500 + i * 2200);
+                    });
+                }
+                if (this.state.completed.length >= 4 && !this.state.certificateShown) {
+                    this.state.certificateShown = true;
+                    this._saveState();
+                    setTimeout(() => this._showCertificate(), 3500);
+                }
+                if (document.getElementById('profile').classList.contains('active')) {
+                    this._renderProfile();
+                }
+            }
+
+            _showCertificate() {
+                const modal = document.getElementById('certificate-modal');
+                if (!modal) return;
+                const certName = document.getElementById('cert-name');
+                const certPoints = document.getElementById('cert-points');
+                if (certName) certName.textContent = this.state.name || 'Maker Sarawak';
+                if (certPoints) certPoints.textContent = this.state.points + ' XP';
+                modal.style.display = 'flex';
+                this._showConfetti();
+            }
+
+            resetAllData() {
+                const lang = this.currentLanguage;
+                const msg = lang === 'en'
+                    ? 'Reset ALL data? Your name, progress, and points will be permanently deleted. This cannot be undone.'
+                    : 'Reset SEMUA data? Nama, kemajuan, dan mata anda akan dipadam selama-lamanya. Ini tidak boleh dibuat alik.';
+                if (!confirm(msg)) return;
+                localStorage.removeItem('smib_state');
+                location.reload();
+            }
+
+            // ─── Help Accordion ───────────────────────────────────────────
+
+            toggleHelp(id) {
+                const el = document.getElementById(id);
+                const arrowId = id + '-arrow';
+                const arrow = document.getElementById(arrowId);
+                const isOpen = el.classList.contains('open');
+                // Close all
+                document.querySelectorAll('.help-solutions').forEach(s => s.classList.remove('open'));
+                document.querySelectorAll('[id$="-arrow"]').forEach(a => { a.style.transform = 'rotate(0deg)'; });
+                // Open clicked if it was closed
+                if (!isOpen) {
+                    el.classList.add('open');
+                    if (arrow) arrow.style.transform = 'rotate(180deg)';
+                }
+            }
+
+            // ─── Toast ────────────────────────────────────────────────────
+
+            showToast(message) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.style.display = 'block';
+                clearTimeout(this._toastTimer);
+                this._toastTimer = setTimeout(() => toast.style.display = 'none', 3000);
+            }
+        }
+
+        const app = new SMIBApp();
+    </script>
+</body>
+</html>

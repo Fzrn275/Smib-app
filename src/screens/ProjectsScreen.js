@@ -10,7 +10,7 @@
 //   - Enrolled projects show a teal checkmark instead of enroll button
 // ============================================================
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadow } from '../theme';
 
@@ -190,7 +191,7 @@ function DiffPill({ diffStyle, label }) {
 // COMPONENT: PROJECT CARD
 // ----------------------------------------------------------
 function ExploreCard({ project, onEnroll }) {
-  const scale = new Animated.Value(1);
+  const scale = useRef(new Animated.Value(1)).current;
 
   const onPressIn  = () => Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 30 }).start();
   const onPressOut = () => Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
@@ -245,6 +246,21 @@ export default function ProjectsScreen() {
   const [search,   setSearch]   = useState('');
   const [category, setCategory] = useState('All');
   const [projects, setProjects] = useState(ALL_PROJECTS);
+  const entranceAnim  = useRef(new Animated.Value(0)).current;
+  const listFadeAnim  = useRef(new Animated.Value(1)).current;
+
+  useFocusEffect(
+    useCallback(() => {
+      entranceAnim.setValue(0);
+      Animated.timing(entranceAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+    }, [])
+  );
+
+  // Fade the card list out then back in whenever filter or search changes
+  useEffect(() => {
+    listFadeAnim.setValue(0);
+    Animated.timing(listFadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+  }, [search, category]);
 
   // Enroll toggles the enrolled flag locally (Supabase will handle this for real)
   const handleEnroll = (id) => {
@@ -267,14 +283,32 @@ export default function ProjectsScreen() {
   const recommended = filtered.filter(p => p.diffStyle === 'easy' && !p.enrolled);
   const allFiltered  = filtered;
 
+  const entranceStyle = {
+    opacity:   entranceAnim,
+    transform: [{ translateY: entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <Animated.View style={[{ flex: 1 }, entranceStyle]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-        {/* ── HEADER ───────────────────────────────────────── */}
+        {/* ── DARK HEADER ──────────────────────────────────── */}
         <View style={styles.header}>
+          <View style={styles.decCircleTop} />
+          <View style={styles.decCircleBottom} />
+          <View style={styles.headerTop}>
+            <View style={styles.logoRow}>
+              <View style={styles.logoIcon}>
+                <Text style={styles.logoEmoji}>🦅</Text>
+              </View>
+              <Text style={styles.logoName}>
+                S-<Text style={styles.logoAccent}>MIB</Text>
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.headerSub}>Semua Projek /</Text>
           <Text style={styles.headerTitle}>Explore Projects 🔍</Text>
-          <Text style={styles.headerSub}>Semua Projek / All Projects</Text>
         </View>
 
         {/* ── SEARCH BAR ───────────────────────────────────── */}
@@ -333,21 +367,24 @@ export default function ProjectsScreen() {
           <Text style={styles.countText}>{allFiltered.length} projects</Text>
         </View>
 
-        {allFiltered.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🔍</Text>
-            <Text style={styles.emptyTitle}>No projects found</Text>
-            <Text style={styles.emptySub}>Try a different search or category</Text>
-          </View>
-        ) : (
-          <View style={styles.cardList}>
-            {allFiltered.map(p => (
-              <ExploreCard key={p.id} project={p} onEnroll={handleEnroll} />
-            ))}
-          </View>
-        )}
+        <Animated.View style={{ opacity: listFadeAnim }}>
+          {allFiltered.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>🔍</Text>
+              <Text style={styles.emptyTitle}>No projects found</Text>
+              <Text style={styles.emptySub}>Try a different search or category</Text>
+            </View>
+          ) : (
+            <View style={styles.cardList}>
+              {allFiltered.map(p => (
+                <ExploreCard key={p.id} project={p} onEnroll={handleEnroll} />
+              ))}
+            </View>
+          )}
+        </Animated.View>
 
       </ScrollView>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -368,21 +405,80 @@ const styles = StyleSheet.create({
 
   // ── Header ─────────────────────────────────────────────
   header: {
-    paddingHorizontal: Spacing.md,
-    paddingTop:        Spacing.md,
-    paddingBottom:     Spacing.sm,
+    backgroundColor:         '#1a1a2e',
+    paddingHorizontal:       Spacing.md,
+    paddingTop:              Spacing.md,
+    paddingBottom:           Spacing.xl,
+    borderBottomLeftRadius:  28,
+    borderBottomRightRadius: 28,
+    overflow:                'hidden',
+    marginBottom:            Spacing.sm,
   },
+
+  decCircleTop: {
+    position:        'absolute',
+    top:             -40,
+    right:           -40,
+    width:           160,
+    height:          160,
+    borderRadius:    80,
+    backgroundColor: 'rgba(244, 196, 48, 0.10)',
+  },
+
+  decCircleBottom: {
+    position:        'absolute',
+    bottom:          -60,
+    left:            -30,
+    width:           140,
+    height:          140,
+    borderRadius:    70,
+    backgroundColor: 'rgba(14, 165, 233, 0.08)',
+  },
+
+  headerTop: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    marginBottom:   Spacing.md,
+    zIndex:         1,
+  },
+
+  logoRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           Spacing.sm,
+  },
+
+  logoIcon: {
+    width:           38,
+    height:          38,
+    borderRadius:    Radius.md,
+    backgroundColor: Colors.gold,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+
+  logoEmoji: { fontSize: 20 },
+
+  logoName: {
+    fontSize:   18,
+    fontWeight: '700',
+    color:      '#ffffff',
+  },
+
+  logoAccent: { color: Colors.gold },
 
   headerTitle: {
     fontSize:   22,
     fontWeight: '800',
-    color:      Colors.textPrimary,
+    color:      '#ffffff',
+    zIndex:     1,
   },
 
   headerSub: {
-    fontSize:  12,
-    color:     Colors.textMuted,
-    marginTop: 2,
+    fontSize:    13,
+    color:       'rgba(255,255,255,0.60)',
+    marginBottom: 2,
+    zIndex:      1,
   },
 
   // ── Search ─────────────────────────────────────────────

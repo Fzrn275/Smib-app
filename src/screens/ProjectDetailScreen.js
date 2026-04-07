@@ -11,7 +11,7 @@
 //   - CTA button: "Done with Step N!" at the bottom
 // ============================================================
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,8 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadow } from '../theme';
 
 // ----------------------------------------------------------
@@ -85,7 +87,16 @@ export default function ProjectDetailScreen({ route, navigation }) {
 
   // useRef keeps the Animated.Value stable across re-renders.
   // Starting at the initial progress so the bar is correct on open.
-  const barAnim = useRef(new Animated.Value(progressPct)).current;
+  const barAnim      = useRef(new Animated.Value(progressPct)).current;
+  const ctaScale     = useRef(new Animated.Value(1)).current;
+  const entranceAnim = useRef(new Animated.Value(0)).current;
+
+  useFocusEffect(
+    useCallback(() => {
+      entranceAnim.setValue(0);
+      Animated.timing(entranceAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+    }, [])
+  );
 
   // Every time progressPct changes (step marked done), animate the bar
   useEffect(() => {
@@ -95,6 +106,14 @@ export default function ProjectDetailScreen({ route, navigation }) {
       useNativeDriver: false,
     }).start();
   }, [progressPct]);
+
+  const onCtaPressIn  = () => Animated.spring(ctaScale, { toValue: 0.96, useNativeDriver: true, speed: 30 }).start();
+  const onCtaPressOut = () => Animated.spring(ctaScale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
+
+  const entranceStyle = {
+    opacity:   entranceAnim,
+    transform: [{ translateY: entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  };
 
   // Mark the current step done and promote the next upcoming step
   const markStepDone = () => {
@@ -124,6 +143,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <Animated.View style={[{ flex: 1 }, entranceStyle]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -142,7 +162,8 @@ export default function ProjectDetailScreen({ route, navigation }) {
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
-            <Text style={styles.backText}>← Back</Text>
+            <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.80)" />
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
 
           {/* Project emoji box */}
@@ -200,17 +221,22 @@ export default function ProjectDetailScreen({ route, navigation }) {
           <Text style={styles.stepsHeading}>Steps 📝</Text>
 
           <View style={styles.stepsList}>
-            {project.steps.map(step => (
+            {steps.map(step => (
               <StepRow key={step.id} step={step} />
             ))}
           </View>
 
           {/* ── CTA BUTTON ─────────────────────────────────── */}
           {currentStep && (
-            <TouchableOpacity style={styles.ctaBtn} onPress={markStepDone} activeOpacity={0.85}>
-              <Text style={styles.ctaText}>
-                ✅ Done with Step {currentStep.id}!
-              </Text>
+            <TouchableOpacity
+              onPress={markStepDone}
+              onPressIn={onCtaPressIn}
+              onPressOut={onCtaPressOut}
+              activeOpacity={1}
+            >
+              <Animated.View style={[styles.ctaBtn, { transform: [{ scale: ctaScale }] }]}>
+                <Text style={styles.ctaText}>✅ Done with Step {currentStep.id}!</Text>
+              </Animated.View>
             </TouchableOpacity>
           )}
 
@@ -224,6 +250,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
         </View>
 
       </ScrollView>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -273,15 +300,19 @@ const styles = StyleSheet.create({
   },
 
   backBtn: {
-    marginBottom: Spacing.md,
-    alignSelf:    'flex-start',
-    position:     'relative',
-    zIndex:       1,
+    flexDirection:  'row',
+    alignItems:     'center',
+    gap:            2,
+    marginBottom:   Spacing.md,
+    alignSelf:      'flex-start',
+    position:       'relative',
+    zIndex:         1,
   },
 
   backText: {
-    fontSize:  13,
-    color:     'rgba(255,255,255,0.60)',
+    fontSize:   13,
+    fontWeight: '600',
+    color:      'rgba(255,255,255,0.80)',
   },
 
   projectEmoji: {

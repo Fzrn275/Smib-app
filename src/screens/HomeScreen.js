@@ -10,6 +10,7 @@
 //   - Each card: coloured emoji box + title/subtitle/progress + difficulty pill
 // ============================================================
 
+import { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -19,95 +20,23 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadow } from '../theme';
+import { USER, MY_PROJECTS as PROJECTS } from '../data';
+import AnimatedNumber from '../components/AnimatedNumber';
+import AppModal from '../components/AppModal';
 
 // ----------------------------------------------------------
-// STATIC DATA — placeholder until Supabase is connected
+// Dynamic greeting based on time of day
 // ----------------------------------------------------------
-const USER = {
-  name:     'Fazrin',
-  level:    4,
-  xp:       620,
-  xpMax:    1000,
-  active:   3,
-  done:     7,
-  badges:   12,
-};
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning,';
+  if (hour < 17) return 'Good afternoon,';
+  return 'Good evening,';
+}
 
-const PROJECTS = [
-  {
-    id:         'solar-charger',
-    emoji:      '⚡',
-    emojiColor: Colors.tealLight,
-    title:      'Solar Phone Charger',
-    subtitle:   'Electronics • 3 of 6 steps done',
-    progress:   0.5,
-    barColor:   Colors.teal,
-    difficulty: 'Easy',
-    diffStyle:  'easy',
-    // Detail screen data
-    category:   'Electronics',
-    duration:   'About 2 hours',
-    tags:       ['Step-by-step', '♻️ Recycled'],
-    steps: [
-      { id: 1, title: 'Gather materials',    status: 'done'     },
-      { id: 2, title: 'Connect solar panel', status: 'done'     },
-      { id: 3, title: 'Wire the circuit',    status: 'done'     },
-      { id: 4, title: 'Add USB port',        status: 'current'  },
-      { id: 5, title: 'Test the charger',    status: 'upcoming' },
-      { id: 6, title: 'Final assembly',      status: 'upcoming' },
-    ],
-  },
-  {
-    id:         'water-sensor',
-    emoji:      '🌱',
-    emojiColor: Colors.successLight,
-    title:      'Smart Water Sensor',
-    subtitle:   'Agriculture • 8 of 10 steps done',
-    progress:   0.8,
-    barColor:   Colors.success,
-    difficulty: 'Medium',
-    diffStyle:  'medium',
-    category:   'Agriculture',
-    duration:   'About 3 hours',
-    tags:       ['Step-by-step', '🌊 Water'],
-    steps: [
-      { id: 1,  title: 'Gather components',      status: 'done'     },
-      { id: 2,  title: 'Set up Arduino',          status: 'done'     },
-      { id: 3,  title: 'Wire the sensor',         status: 'done'     },
-      { id: 4,  title: 'Write sensor code',       status: 'done'     },
-      { id: 5,  title: 'Test sensor readings',    status: 'done'     },
-      { id: 6,  title: 'Build waterproof casing', status: 'done'     },
-      { id: 7,  title: 'Mount in field position', status: 'done'     },
-      { id: 8,  title: 'Calibrate sensor',        status: 'done'     },
-      { id: 9,  title: 'Connect to data logger',  status: 'current'  },
-      { id: 10, title: 'Final field test',        status: 'upcoming' },
-    ],
-  },
-  {
-    id:         'wind-turbine',
-    emoji:      '♻️',
-    emojiColor: Colors.warningLight,
-    title:      'Recycled Wind Turbine',
-    subtitle:   'Renewable Energy • Not started',
-    progress:   0,
-    barColor:   Colors.warning,
-    difficulty: 'Easy',
-    diffStyle:  'easy',
-    category:   'Renewable Energy',
-    duration:   'About 4 hours',
-    tags:       ['Step-by-step', '♻️ Recycled'],
-    steps: [
-      { id: 1, title: 'Collect recycled materials', status: 'current'  },
-      { id: 2, title: 'Cut turbine blades',          status: 'upcoming' },
-      { id: 3, title: 'Assemble rotor',              status: 'upcoming' },
-      { id: 4, title: 'Attach motor/generator',      status: 'upcoming' },
-      { id: 5, title: 'Build the tower',             status: 'upcoming' },
-      { id: 6, title: 'Test power output',           status: 'upcoming' },
-    ],
-  },
-];
 
 // ----------------------------------------------------------
 // COMPONENT: DIFFICULTY PILL
@@ -127,14 +56,32 @@ function DiffPill({ style: diffStyle, label }) {
 // ----------------------------------------------------------
 // COMPONENT: PROJECT CARD
 // ----------------------------------------------------------
-function ProjectCard({ project, onPress }) {
-  // Scale down on press — Web3-style press feedback
-  const scale = new Animated.Value(1);
+function ProjectCard({ project, onPress, index = 0 }) {
+  const scale        = useRef(new Animated.Value(1)).current;
+  const staggerAnim  = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(staggerAnim, {
+      toValue:         1,
+      delay:           index * 80,
+      useNativeDriver: true,
+      tension:         80,
+      friction:        9,
+    }).start();
+  }, []);
 
   const onPressIn = () =>
     Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 30 }).start();
   const onPressOut = () =>
     Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }).start();
+
+  const staggerStyle = {
+    opacity:   staggerAnim,
+    transform: [
+      { scale },
+      { translateY: staggerAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+    ],
+  };
 
   return (
     <TouchableOpacity
@@ -143,7 +90,7 @@ function ProjectCard({ project, onPress }) {
       onPressOut={onPressOut}
       activeOpacity={1}
     >
-      <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+      <Animated.View style={[styles.card, staggerStyle]}>
 
         {/* Emoji icon box */}
         <View style={[styles.emojiBox, { backgroundColor: project.emojiColor }]}>
@@ -180,7 +127,7 @@ function ProjectCard({ project, onPress }) {
 function StatBox({ value, label, valueColor }) {
   return (
     <View style={styles.statBox}>
-      <Text style={[styles.statNum, { color: valueColor }]}>{value}</Text>
+      <AnimatedNumber value={value} style={[styles.statNum, { color: valueColor }]} />
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -190,10 +137,31 @@ function StatBox({ value, label, valueColor }) {
 // MAIN SCREEN
 // ----------------------------------------------------------
 export default function HomeScreen({ navigation }) {
-  const xpPercent = USER.xp / USER.xpMax;
+  const xpPercent    = USER.xp / USER.xpMax;
+  const xpBarAnim    = useRef(new Animated.Value(0)).current;
+  const entranceAnim = useRef(new Animated.Value(0)).current;
+  const [modal, setModal] = useState(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      xpBarAnim.setValue(0);
+      entranceAnim.setValue(0);
+      Animated.parallel([
+        Animated.timing(xpBarAnim,    { toValue: xpPercent, duration: 900, useNativeDriver: false }),
+        Animated.timing(entranceAnim, { toValue: 1,         duration: 400, useNativeDriver: true  }),
+      ]).start();
+    }, [])
+  );
+
+  const xpBarWidth = xpBarAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const entranceStyle = {
+    opacity:   entranceAnim,
+    transform: [{ translateY: entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <Animated.View style={[{ flex: 1 }, entranceStyle]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -216,13 +184,17 @@ export default function HomeScreen({ navigation }) {
                 S-<Text style={styles.logoAccent}>MIB</Text>
               </Text>
             </View>
-            <TouchableOpacity style={styles.notifBtn} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.notifBtn}
+              activeOpacity={0.7}
+              onPress={() => setModal({ emoji: '🔔', title: 'Notifications', message: 'No new notifications right now.\nCheck back after completing a project step!' })}
+            >
               <Ionicons name="notifications-outline" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
 
           {/* Greeting */}
-          <Text style={styles.greetingSub}>Good morning,</Text>
+          <Text style={styles.greetingSub}>{getGreeting()}</Text>
           <Text style={styles.greetingName}>
             {USER.name} <Text>👋</Text>
           </Text>
@@ -235,9 +207,9 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.xpText}>{USER.xp} / {USER.xpMax} XP</Text>
           </View>
 
-          {/* XP progress bar */}
+          {/* XP progress bar — animates on mount */}
           <View style={styles.xpBarOuter}>
-            <View style={[styles.xpBarInner, { width: `${xpPercent * 100}%` }]} />
+            <Animated.View style={[styles.xpBarInner, { width: xpBarWidth }]} />
           </View>
 
         </View>
@@ -252,22 +224,30 @@ export default function HomeScreen({ navigation }) {
         {/* ── PROJECTS SECTION ─────────────────────────────── */}
         <View style={styles.sectionHead}>
           <Text style={styles.sectionTitle}>My Projects 📋</Text>
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Explore')}>
             <Text style={styles.seeAll}>See All →</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.cardList}>
-          {PROJECTS.map(project => (
+          {PROJECTS.map((project, i) => (
             <ProjectCard
               key={project.id}
               project={project}
+              index={i}
               onPress={() => navigation.navigate('ProjectDetail', { project })}
             />
           ))}
         </View>
 
       </ScrollView>
+      </Animated.View>
+
+      <AppModal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        {...(modal ?? {})}
+      />
     </SafeAreaView>
   );
 }

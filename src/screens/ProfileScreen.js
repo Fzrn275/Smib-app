@@ -9,7 +9,7 @@
 //   - Settings list — language, notifications, about, sign out
 // ============================================================
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { Colors, Spacing, Radius, Shadow } from '../theme';
 import { USER } from '../data';
 import AnimatedNumber from '../components/AnimatedNumber';
@@ -30,11 +31,12 @@ import AppModal from '../components/AppModal';
 // ----------------------------------------------------------
 // COMPONENT: STAT BOX
 // ----------------------------------------------------------
-function StatBox({ icon, value, label, valueColor }) {
+function StatBox({ icon, value, label, valueColor, trigger }) {
   return (
     <View style={styles.statBox}>
+      <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
       <Text style={styles.statIcon}>{icon}</Text>
-      <AnimatedNumber value={value} style={[styles.statNum, { color: valueColor }]} />
+      <AnimatedNumber value={value} style={[styles.statNum, { color: valueColor }]} trigger={trigger} />
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -43,13 +45,32 @@ function StatBox({ icon, value, label, valueColor }) {
 // ----------------------------------------------------------
 // COMPONENT: SETTINGS ROW
 // ----------------------------------------------------------
-function SettingsRow({ icon, iconBg, label, sublabel, onPress, right }) {
-  const scale = useRef(new Animated.Value(1)).current;
+function SettingsRow({ icon, iconBg, label, sublabel, onPress, right, index = 0, focusTrigger = 0 }) {
+  const scale        = useRef(new Animated.Value(1)).current;
+  const entranceAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    entranceAnim.setValue(0);
+    Animated.spring(entranceAnim, {
+      toValue:         1,
+      delay:           index * 50,
+      useNativeDriver: true,
+      tension:         80,
+      friction:        9,
+    }).start();
+  }, [focusTrigger]);
+
   const onPressIn  = () => Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 30 }).start();
   const onPressOut = () => Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
 
   return (
-    <Animated.View style={{ transform: [{ scale }] }}>
+    <Animated.View style={{
+      opacity:   entranceAnim,
+      transform: [
+        { scale },
+        { translateX: entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) },
+      ],
+    }}>
       <TouchableOpacity
         style={styles.settingsRow}
         onPress={onPress}
@@ -86,10 +107,12 @@ export default function ProfileScreen() {
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [langBM, setLangBM]             = useState(true);
   const [modal, setModal]               = useState(null);
+  const [focusTrigger, setFocusTrigger] = useState(0);
   const entranceAnim = useRef(new Animated.Value(0)).current;
 
   useFocusEffect(
     useCallback(() => {
+      setFocusTrigger(t => t + 1);
       entranceAnim.setValue(0);
       Animated.timing(entranceAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
     }, [])
@@ -143,9 +166,9 @@ export default function ProfileScreen() {
 
         {/* ── STATS ROW (overlaps header) ───────────────────── */}
         <View style={styles.statsGrid}>
-          <StatBox icon="⭐" value={USER.xp}    label="Total XP"   valueColor={Colors.gold}    />
-          <StatBox icon="✅" value={USER.done}   label="Done"       valueColor={Colors.success} />
-          <StatBox icon="🔥" value={USER.streak} label="Day Streak" valueColor={Colors.warning} />
+          <StatBox icon="⭐" value={USER.xp}    label="Total XP"   valueColor={Colors.gold}    trigger={focusTrigger} />
+          <StatBox icon="✅" value={USER.done}   label="Done"       valueColor={Colors.success} trigger={focusTrigger} />
+          <StatBox icon="🔥" value={USER.streak} label="Day Streak" valueColor={Colors.warning} trigger={focusTrigger} />
         </View>
 
         {/* ── STUDENT INFO CARD ─────────────────────────────── */}
@@ -200,6 +223,8 @@ export default function ProfileScreen() {
             iconBg={Colors.teal}
             label="Notifications"
             sublabel="Project reminders & updates"
+            index={0}
+            focusTrigger={focusTrigger}
             right={
               <Switch
                 value={notifEnabled}
@@ -217,6 +242,8 @@ export default function ProfileScreen() {
             iconBg={Colors.info}
             label="Language / Bahasa"
             sublabel={langBM ? 'Bahasa Malaysia' : 'English'}
+            index={1}
+            focusTrigger={focusTrigger}
             right={
               <Switch
                 value={langBM}
@@ -239,6 +266,8 @@ export default function ProfileScreen() {
             iconBg={Colors.warning}
             label="About S-MIB"
             sublabel="Version 1.0.0"
+            index={2}
+            focusTrigger={focusTrigger}
             onPress={() => setModal({ emoji: '🦅', title: 'About S-MIB', message: 'S-MIB v1.0.0\nSarawak STEM Inovator Belia\n\nBuilt to help students discover and complete hands-on maker projects.' })}
           />
 
@@ -249,6 +278,8 @@ export default function ProfileScreen() {
             iconBg={Colors.teal}
             label="Help & Support"
             sublabel="FAQs and contact"
+            index={3}
+            focusTrigger={focusTrigger}
             onPress={() => setModal({ emoji: '🛟', title: 'Help & Support', message: 'Having trouble?\n\nAsk your teacher or contact your school STEM coordinator for assistance.' })}
           />
 
@@ -258,6 +289,8 @@ export default function ProfileScreen() {
             icon="log-out-outline"
             iconBg={Colors.red}
             label="Sign Out"
+            index={4}
+            focusTrigger={focusTrigger}
             onPress={() => setModal({
               emoji: '🚪',
               title: 'Log Keluar / Sign Out',
@@ -417,12 +450,14 @@ const styles = StyleSheet.create({
   },
 
   statBox: {
-    flex:            1,
-    backgroundColor: Colors.card,
-    borderRadius:    Radius.lg,
-    paddingVertical: 12,
-    alignItems:      'center',
-    ...Shadow.card,
+    flex:             1,
+    borderRadius:     Radius.lg,
+    paddingVertical:  12,
+    alignItems:       'center',
+    overflow:         'hidden',
+    backgroundColor:  'rgba(255,255,255,0.06)',
+    borderWidth:      1,
+    borderColor:      'rgba(255,255,255,0.16)',
   },
 
   statIcon: {
@@ -438,7 +473,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize:      10,
     fontWeight:    '600',
-    color:         Colors.textMuted,
+    color:         'rgba(255,255,255,0.65)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop:     2,

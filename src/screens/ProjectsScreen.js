@@ -161,14 +161,45 @@ const CATEGORIES = ['All', 'Electronics', 'Agriculture', 'Renewable Energy', 'Cr
 // COMPONENT: CATEGORY CHIP
 // ----------------------------------------------------------
 function CategoryChip({ label, active, onPress }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const onPressIn  = () => Animated.spring(scale, { toValue: 0.93, useNativeDriver: true, speed: 30 }).start();
+  const onPressOut = () => Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
+
   return (
-    <TouchableOpacity
-      style={[styles.chip, active && styles.chipActive]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
-    </TouchableOpacity>
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <TouchableOpacity
+        style={[styles.chip, active && styles.chipActive]}
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        activeOpacity={1}
+      >
+        <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
+// ----------------------------------------------------------
+// COMPONENT: ENROLL BUTTON — spring press feedback
+// ----------------------------------------------------------
+function EnrollBtn({ onPress }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const onPressIn  = () => Animated.spring(scale, { toValue: 0.90, useNativeDriver: true, speed: 30 }).start();
+  const onPressOut = () => Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
+
+  return (
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <TouchableOpacity
+        style={styles.enrollBtn}
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        activeOpacity={1}
+      >
+        <Text style={styles.enrollText}>+ Join</Text>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
@@ -190,14 +221,34 @@ function DiffPill({ diffStyle, label }) {
 // ----------------------------------------------------------
 // COMPONENT: PROJECT CARD
 // ----------------------------------------------------------
-function ExploreCard({ project, onEnroll }) {
-  const scale = useRef(new Animated.Value(1)).current;
+function ExploreCard({ project, onEnroll, index = 0, focusTrigger = 0 }) {
+  const scale       = useRef(new Animated.Value(1)).current;
+  const staggerAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    staggerAnim.setValue(0);
+    Animated.spring(staggerAnim, {
+      toValue:         1,
+      delay:           index * 60,
+      useNativeDriver: true,
+      tension:         80,
+      friction:        9,
+    }).start();
+  }, [focusTrigger]);
 
   const onPressIn  = () => Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 30 }).start();
   const onPressOut = () => Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
 
+  const staggerStyle = {
+    opacity:   staggerAnim,
+    transform: [
+      { scale },
+      { translateY: staggerAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) },
+    ],
+  };
+
   return (
-    <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+    <Animated.View style={[styles.card, staggerStyle]}>
       <TouchableOpacity
         onPressIn={onPressIn}
         onPressOut={onPressOut}
@@ -229,9 +280,7 @@ function ExploreCard({ project, onEnroll }) {
             <Ionicons name="checkmark-circle" size={24} color={Colors.teal} />
           </View>
         ) : (
-          <TouchableOpacity style={styles.enrollBtn} onPress={() => onEnroll(project.id)} activeOpacity={0.8}>
-            <Text style={styles.enrollText}>+ Join</Text>
-          </TouchableOpacity>
+          <EnrollBtn onPress={() => onEnroll(project.id)} />
         )}
 
       </TouchableOpacity>
@@ -246,11 +295,13 @@ export default function ProjectsScreen() {
   const [search,   setSearch]   = useState('');
   const [category, setCategory] = useState('All');
   const [projects, setProjects] = useState(ALL_PROJECTS);
+  const [focusTrigger, setFocusTrigger] = useState(0);
   const entranceAnim  = useRef(new Animated.Value(0)).current;
   const listFadeAnim  = useRef(new Animated.Value(1)).current;
 
   useFocusEffect(
     useCallback(() => {
+      setFocusTrigger(t => t + 1);
       entranceAnim.setValue(0);
       Animated.timing(entranceAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
     }, [])
@@ -352,8 +403,8 @@ export default function ProjectsScreen() {
               <Text style={styles.sectionTitle}>Recommended for You ⭐</Text>
             </View>
             <View style={styles.cardList}>
-              {recommended.map(p => (
-                <ExploreCard key={p.id} project={p} onEnroll={handleEnroll} />
+              {recommended.map((p, i) => (
+                <ExploreCard key={p.id} project={p} index={i} focusTrigger={focusTrigger} onEnroll={handleEnroll} />
               ))}
             </View>
           </>
@@ -376,8 +427,8 @@ export default function ProjectsScreen() {
             </View>
           ) : (
             <View style={styles.cardList}>
-              {allFiltered.map(p => (
-                <ExploreCard key={p.id} project={p} onEnroll={handleEnroll} />
+              {allFiltered.map((p, i) => (
+                <ExploreCard key={p.id} project={p} index={i} focusTrigger={focusTrigger} onEnroll={handleEnroll} />
               ))}
             </View>
           )}

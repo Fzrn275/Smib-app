@@ -4,7 +4,7 @@
 //          Replaces all plain Alert.alert() calls app-wide.
 //
 // DESIGN: Web3-style slide-up sheet with spring entrance,
-//         animated backdrop, and the app's design system.
+//         animated backdrop, and glassmorphism frosted sheet.
 //
 // USAGE:
 //   const [modal, setModal] = useState(null);
@@ -31,12 +31,13 @@ import {
   Modal,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Colors, Spacing, Radius, Shadow } from '../theme';
 
 export default function AppModal({ visible, onClose, emoji, title, message, action }) {
   // Keep the sheet rendered during the close animation
   const [showing, setShowing] = useState(false);
-  const slideAnim   = useRef(new Animated.Value(500)).current;
+  const slideAnim    = useRef(new Animated.Value(500)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -53,7 +54,6 @@ export default function AppModal({ visible, onClose, emoji, title, message, acti
         }),
       ]).start();
     } else {
-      // Animate out, then hide
       Animated.parallel([
         Animated.timing(backdropAnim, {
           toValue: 0, duration: 180, useNativeDriver: true,
@@ -80,39 +80,49 @@ export default function AppModal({ visible, onClose, emoji, title, message, acti
         <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]} />
       </TouchableWithoutFeedback>
 
-      {/* ── SHEET ── */}
-      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
+      {/* ── GLASSMORPHISM SHEET ── */}
+      <Animated.View style={[styles.sheetOuter, { transform: [{ translateY: slideAnim }] }]}>
 
-        {/* Drag handle */}
-        <View style={styles.handle} />
+        {/* Frosted glass layer — blurs the content underneath */}
+        <BlurView intensity={70} tint="extraLight" style={StyleSheet.absoluteFill} />
 
-        {/* Emoji */}
-        {!!emoji && <Text style={styles.emoji}>{emoji}</Text>}
+        {/* White overlay to boost the glass opacity */}
+        <View style={styles.sheetOverlay} />
 
-        {/* Title */}
-        <Text style={styles.title}>{title}</Text>
+        {/* Content sits above blur + overlay */}
+        <View style={styles.sheetContent}>
 
-        {/* Message */}
-        {!!message && <Text style={styles.message}>{message}</Text>}
+          {/* Drag handle */}
+          <View style={styles.handle} />
 
-        {/* Optional action button */}
-        {!!action && (
-          <TouchableOpacity
-            style={[styles.actionBtn, action.destructive && styles.actionBtnDestructive]}
-            onPress={() => { action.onPress?.(); onClose(); }}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.actionText, action.destructive && styles.actionTextDestructive]}>
-              {action.label}
-            </Text>
+          {/* Emoji */}
+          {!!emoji && <Text style={styles.emoji}>{emoji}</Text>}
+
+          {/* Title */}
+          <Text style={styles.title}>{title}</Text>
+
+          {/* Message */}
+          {!!message && <Text style={styles.message}>{message}</Text>}
+
+          {/* Optional action button */}
+          {!!action && (
+            <TouchableOpacity
+              style={[styles.actionBtn, action.destructive && styles.actionBtnDestructive]}
+              onPress={() => { action.onPress?.(); onClose(); }}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.actionText, action.destructive && styles.actionTextDestructive]}>
+                {action.label}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Close / dismiss button */}
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+            <Text style={styles.closeText}>Dismiss</Text>
           </TouchableOpacity>
-        )}
 
-        {/* Close / dismiss button */}
-        <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-          <Text style={styles.closeText}>Dismiss</Text>
-        </TouchableOpacity>
-
+        </View>
       </Animated.View>
     </Modal>
   );
@@ -128,26 +138,40 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
 
-  sheet: {
-    position:        'absolute',
-    bottom:          0,
-    left:            0,
-    right:           0,
-    backgroundColor: Colors.card,
+  // Outer wrapper: handles position, border radius, overflow, shadow
+  sheetOuter: {
+    position:             'absolute',
+    bottom:               0,
+    left:                 0,
+    right:                0,
     borderTopLeftRadius:  28,
     borderTopRightRadius: 28,
+    overflow:             'hidden',
+    borderWidth:          1,
+    borderBottomWidth:    0,
+    borderColor:          'rgba(255,255,255,0.5)',
+    ...Shadow.strong,
+  },
+
+  // Semi-transparent white layer on top of the blur
+  sheetOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.45)',
+  },
+
+  // Content layer sits on top of blur + overlay
+  sheetContent: {
     paddingHorizontal: Spacing.lg,
     paddingTop:        Spacing.sm,
     paddingBottom:     40,
     alignItems:        'center',
-    ...Shadow.strong,
   },
 
   handle: {
     width:           44,
     height:          4,
     borderRadius:    Radius.full,
-    backgroundColor: Colors.border,
+    backgroundColor: 'rgba(0,0,0,0.15)',
     marginBottom:    Spacing.lg,
   },
 
@@ -183,9 +207,9 @@ const styles = StyleSheet.create({
   },
 
   actionBtnDestructive: {
-    backgroundColor: '#fff0f0',
+    backgroundColor: 'rgba(204,37,41,0.08)',
     borderWidth:     1,
-    borderColor:     '#fecaca',
+    borderColor:     'rgba(204,37,41,0.25)',
   },
 
   actionText: {
@@ -200,10 +224,12 @@ const styles = StyleSheet.create({
 
   closeBtn: {
     width:           '100%',
-    backgroundColor: Colors.background,
+    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius:    Radius.lg,
     paddingVertical: 14,
     alignItems:      'center',
+    borderWidth:     1,
+    borderColor:     'rgba(0,0,0,0.06)',
   },
 
   closeText: {

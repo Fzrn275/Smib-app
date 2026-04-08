@@ -8,11 +8,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Animated, Text } from 'react-native';
 
-export default function AnimatedNumber({ value, style, duration = 900 }) {
+export default function AnimatedNumber({ value, style, duration = 900, trigger }) {
   const animValue = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
+    animValue.setValue(0);
     const listener = animValue.addListener(({ value: v }) => {
       setDisplay(Math.round(v));
     });
@@ -24,7 +25,7 @@ export default function AnimatedNumber({ value, style, duration = 900 }) {
     }).start();
 
     return () => animValue.removeListener(listener);
-  }, [value]);
+  }, [value, trigger]);
 
   return <Text style={style}>{display}</Text>;
 }

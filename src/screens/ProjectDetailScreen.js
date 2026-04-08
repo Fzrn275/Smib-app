@@ -32,21 +32,38 @@ import { Colors, Spacing, Radius, Shadow } from '../theme';
 //   'current'  → teal pill card, "👈 You are here!"
 //   'upcoming' → grey numbered circle, very faded
 // ----------------------------------------------------------
-function StepRow({ step }) {
+function StepRow({ step, index = 0, focusTrigger = 0 }) {
+  const entranceAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    entranceAnim.setValue(0);
+    Animated.spring(entranceAnim, {
+      toValue:         1,
+      delay:           index * 50,
+      useNativeDriver: true,
+      tension:         80,
+      friction:        9,
+    }).start();
+  }, [focusTrigger]);
+
+  const slideStyle = {
+    transform: [{ translateX: entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] }) }],
+  };
+
   if (step.status === 'done') {
     return (
-      <View style={[styles.stepRow, { opacity: 0.6 }]}>
+      <Animated.View style={[styles.stepRow, slideStyle, { opacity: entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.6] }) }]}>
         <View style={[styles.stepCircle, styles.stepCircleDone]}>
           <Text style={styles.stepCircleText}>✓</Text>
         </View>
         <Text style={[styles.stepTitle, styles.stepTitleDone]}>{step.title}</Text>
-      </View>
+      </Animated.View>
     );
   }
 
   if (step.status === 'current') {
     return (
-      <View style={[styles.stepRow, styles.stepRowCurrent]}>
+      <Animated.View style={[styles.stepRow, styles.stepRowCurrent, slideStyle, { opacity: entranceAnim }]}>
         <View style={[styles.stepCircle, styles.stepCircleCurrent]}>
           <Text style={styles.stepCircleText}>{step.id}</Text>
         </View>
@@ -54,18 +71,18 @@ function StepRow({ step }) {
           <Text style={styles.stepTitle}>{step.title}</Text>
           <Text style={styles.stepHere}>👈 You are here!</Text>
         </View>
-      </View>
+      </Animated.View>
     );
   }
 
   // upcoming
   return (
-    <View style={[styles.stepRow, { opacity: 0.4 }]}>
+    <Animated.View style={[styles.stepRow, slideStyle, { opacity: entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.4] }) }]}>
       <View style={[styles.stepCircle, styles.stepCircleUpcoming]}>
         <Text style={[styles.stepCircleText, { color: Colors.textMuted }]}>{step.id}</Text>
       </View>
       <Text style={[styles.stepTitle, { color: Colors.textMuted }]}>{step.title}</Text>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -87,12 +104,14 @@ export default function ProjectDetailScreen({ route, navigation }) {
 
   // useRef keeps the Animated.Value stable across re-renders.
   // Starting at the initial progress so the bar is correct on open.
-  const barAnim      = useRef(new Animated.Value(progressPct)).current;
+  const barAnim      = useRef(new Animated.Value(0)).current;
   const ctaScale     = useRef(new Animated.Value(1)).current;
   const entranceAnim = useRef(new Animated.Value(0)).current;
+  const [focusTrigger, setFocusTrigger] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
+      setFocusTrigger(t => t + 1);
       entranceAnim.setValue(0);
       Animated.timing(entranceAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
     }, [])
@@ -107,8 +126,11 @@ export default function ProjectDetailScreen({ route, navigation }) {
     }).start();
   }, [progressPct]);
 
-  const onCtaPressIn  = () => Animated.spring(ctaScale, { toValue: 0.96, useNativeDriver: true, speed: 30 }).start();
-  const onCtaPressOut = () => Animated.spring(ctaScale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
+  const backScale     = useRef(new Animated.Value(1)).current;
+  const onCtaPressIn  = () => Animated.spring(ctaScale,  { toValue: 0.96, useNativeDriver: true, speed: 30 }).start();
+  const onCtaPressOut = () => Animated.spring(ctaScale,  { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
+  const onBackPressIn  = () => Animated.spring(backScale, { toValue: 0.90, useNativeDriver: true, speed: 30 }).start();
+  const onBackPressOut = () => Animated.spring(backScale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
 
   const entranceStyle = {
     opacity:   entranceAnim,
@@ -157,14 +179,18 @@ export default function ProjectDetailScreen({ route, navigation }) {
           <View style={styles.decCircleBottom} />
 
           {/* Back button */}
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.80)" />
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale: backScale }] }}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => navigation.goBack()}
+              onPressIn={onBackPressIn}
+              onPressOut={onBackPressOut}
+              activeOpacity={1}
+            >
+              <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.80)" />
+              <Text style={styles.backText}>Back</Text>
+            </TouchableOpacity>
+          </Animated.View>
 
           {/* Project emoji box */}
           <View style={[styles.projectEmoji, { backgroundColor: project.emojiColor }]}>
@@ -221,8 +247,8 @@ export default function ProjectDetailScreen({ route, navigation }) {
           <Text style={styles.stepsHeading}>Steps 📝</Text>
 
           <View style={styles.stepsList}>
-            {steps.map(step => (
-              <StepRow key={step.id} step={step} />
+            {steps.map((step, i) => (
+              <StepRow key={step.id} step={step} index={i} focusTrigger={focusTrigger} />
             ))}
           </View>
 

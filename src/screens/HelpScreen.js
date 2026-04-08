@@ -5,7 +5,7 @@
 //
 // LAYOUT:
 //   - Dark header (matches HomeScreen style) with screen title
-//   - Stats row overlapping the header (streak, done, badges)
+//   - Stats row overlapping the header (streak, done, badges) — glass cards
 //   - Level hero card — current level, rank title, XP bar
 //   - Badges grid — earned (coloured) + locked (grey)
 //   - Category skill bars — progress per subject area
@@ -23,6 +23,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { Colors, Spacing, Radius, Shadow } from '../theme';
 import { USER } from '../data';
 import AnimatedNumber from '../components/AnimatedNumber';
@@ -50,13 +51,14 @@ const CATEGORIES = [
 ];
 
 // ----------------------------------------------------------
-// COMPONENT: STAT BOX
+// COMPONENT: STAT BOX — glassmorphism frosted dark card
 // ----------------------------------------------------------
-function StatBox({ icon, value, label, valueColor }) {
+function StatBox({ icon, value, label, valueColor, trigger }) {
   return (
     <View style={styles.statBox}>
+      <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
       <Text style={styles.statIcon}>{icon}</Text>
-      <AnimatedNumber value={value} style={[styles.statNum, { color: valueColor }]} />
+      <AnimatedNumber value={value} style={[styles.statNum, { color: valueColor }]} trigger={trigger} />
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -64,18 +66,20 @@ function StatBox({ icon, value, label, valueColor }) {
 
 // ----------------------------------------------------------
 // COMPONENT: LEVEL HERO CARD
+// focusTrigger replays the XP bar animation on every tab visit
 // ----------------------------------------------------------
-function LevelCard({ user }) {
-  const xpAnim = useRef(new Animated.Value(0)).current;
+function LevelCard({ user, focusTrigger }) {
+  const xpAnim    = useRef(new Animated.Value(0)).current;
   const xpPercent = user.xp / user.xpMax;
 
   useEffect(() => {
+    xpAnim.setValue(0);
     Animated.timing(xpAnim, {
       toValue:         xpPercent,
       duration:        900,
       useNativeDriver: false,
     }).start();
-  }, []);
+  }, [focusTrigger]);
 
   const barWidth = xpAnim.interpolate({
     inputRange:  [0, 1],
@@ -84,10 +88,8 @@ function LevelCard({ user }) {
 
   return (
     <View style={styles.levelCard}>
-      {/* Decorative background circle */}
       <View style={styles.levelDecCircle} />
 
-      {/* Top row: level badge + rank */}
       <View style={styles.levelTop}>
         <View style={styles.levelBadge}>
           <Text style={styles.levelBadgeNum}>{user.level}</Text>
@@ -101,7 +103,6 @@ function LevelCard({ user }) {
         </View>
       </View>
 
-      {/* XP bar */}
       <View style={styles.xpLabelRow}>
         <Text style={styles.xpLabel}>XP Progress</Text>
         <Text style={styles.xpValue}>{user.xp} / {user.xpMax}</Text>
@@ -116,12 +117,14 @@ function LevelCard({ user }) {
 
 // ----------------------------------------------------------
 // COMPONENT: BADGE TILE — staggered entrance + spring press + tappable
+// focusTrigger replays the entrance animation on every tab visit
 // ----------------------------------------------------------
-function BadgeTile({ badge, index, onBadgePress }) {
+function BadgeTile({ badge, index, onBadgePress, focusTrigger }) {
   const entranceAnim = useRef(new Animated.Value(0)).current;
   const pressScale   = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    entranceAnim.setValue(0);
     Animated.spring(entranceAnim, {
       toValue:         1,
       delay:           index * 60,
@@ -129,7 +132,7 @@ function BadgeTile({ badge, index, onBadgePress }) {
       tension:         80,
       friction:        8,
     }).start();
-  }, []);
+  }, [focusTrigger]);
 
   const onPressIn  = () => Animated.spring(pressScale, { toValue: 0.93, useNativeDriver: true, speed: 30 }).start();
   const onPressOut = () => Animated.spring(pressScale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start();
@@ -168,18 +171,20 @@ function BadgeTile({ badge, index, onBadgePress }) {
 
 // ----------------------------------------------------------
 // COMPONENT: CATEGORY BAR ROW
+// focusTrigger replays the bar fill animation on every tab visit
 // ----------------------------------------------------------
-function CategoryBar({ cat, index }) {
+function CategoryBar({ cat, index, focusTrigger }) {
   const barAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    barAnim.setValue(0);
     Animated.timing(barAnim, {
       toValue:         cat.progress,
       duration:        800,
       delay:           200 + index * 100,
       useNativeDriver: false,
     }).start();
-  }, []);
+  }, [focusTrigger]);
 
   const barWidth = barAnim.interpolate({
     inputRange:  [0, 1],
@@ -213,10 +218,12 @@ function CategoryBar({ cat, index }) {
 export default function HelpScreen() {
   const earnedCount  = BADGES.filter(b => b.earned).length;
   const entranceAnim = useRef(new Animated.Value(0)).current;
-  const [modal, setModal] = useState(null);
+  const [modal, setModal]               = useState(null);
+  const [focusTrigger, setFocusTrigger] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
+      setFocusTrigger(t => t + 1);
       entranceAnim.setValue(0);
       Animated.timing(entranceAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
     }, [])
@@ -248,7 +255,6 @@ export default function HelpScreen() {
           <View style={styles.decCircleTop} />
           <View style={styles.decCircleBottom} />
 
-          {/* Logo row */}
           <View style={styles.headerTop}>
             <View style={styles.logoRow}>
               <View style={styles.logoIcon}>
@@ -260,21 +266,20 @@ export default function HelpScreen() {
             </View>
           </View>
 
-          {/* Title */}
           <Text style={styles.headerSub}>Keep going,</Text>
           <Text style={styles.headerTitle}>My Progress 📈</Text>
         </View>
 
-        {/* ── STATS ROW (overlaps header) ───────────────────── */}
+        {/* ── STATS ROW (glass cards overlapping header) ────── */}
         <View style={styles.statsGrid}>
-          <StatBox icon="🔥" value={USER.streak}  label="Day Streak" valueColor={Colors.warning} />
-          <StatBox icon="✅" value={USER.done}    label="Done"       valueColor={Colors.success} />
-          <StatBox icon="🏅" value={earnedCount}  label="Badges"     valueColor={Colors.gold}    />
+          <StatBox icon="🔥" value={USER.streak}  label="Day Streak" valueColor={Colors.warning} trigger={focusTrigger} />
+          <StatBox icon="✅" value={USER.done}    label="Done"       valueColor={Colors.success} trigger={focusTrigger} />
+          <StatBox icon="🏅" value={earnedCount}  label="Badges"     valueColor={Colors.gold}    trigger={focusTrigger} />
         </View>
 
         {/* ── LEVEL HERO CARD ───────────────────────────────── */}
         <View style={styles.section}>
-          <LevelCard user={USER} />
+          <LevelCard user={USER} focusTrigger={focusTrigger} />
         </View>
 
         {/* ── BADGES ────────────────────────────────────────── */}
@@ -285,7 +290,13 @@ export default function HelpScreen() {
 
         <View style={styles.badgeGrid}>
           {BADGES.map((badge, i) => (
-            <BadgeTile key={badge.id} badge={badge} index={i} onBadgePress={handleBadgePress} />
+            <BadgeTile
+              key={badge.id}
+              badge={badge}
+              index={i}
+              focusTrigger={focusTrigger}
+              onBadgePress={handleBadgePress}
+            />
           ))}
         </View>
 
@@ -297,7 +308,7 @@ export default function HelpScreen() {
         <View style={styles.catCard}>
           {CATEGORIES.map((cat, i) => (
             <React.Fragment key={cat.name}>
-              <CategoryBar cat={cat} index={i} />
+              <CategoryBar cat={cat} index={i} focusTrigger={focusTrigger} />
               {i < CATEGORIES.length - 1 && <View style={styles.catDivider} />}
             </React.Fragment>
           ))}
@@ -406,7 +417,7 @@ const styles = StyleSheet.create({
     zIndex:     1,
   },
 
-  // ── Stats Grid ─────────────────────────────────────────
+  // ── Stats Grid — glass cards ────────────────────────────
   statsGrid: {
     flexDirection:     'row',
     marginHorizontal:  Spacing.md,
@@ -418,15 +429,17 @@ const styles = StyleSheet.create({
 
   statBox: {
     flex:            1,
-    backgroundColor: Colors.card,
     borderRadius:    Radius.lg,
     paddingVertical: 12,
     alignItems:      'center',
-    ...Shadow.card,
+    overflow:        'hidden',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth:     1,
+    borderColor:     'rgba(255,255,255,0.16)',
   },
 
   statIcon: {
-    fontSize:    16,
+    fontSize:     16,
     marginBottom: 2,
   },
 
@@ -438,7 +451,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize:      10,
     fontWeight:    '600',
-    color:         Colors.textMuted,
+    color:         'rgba(255,255,255,0.65)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop:     2,
@@ -501,8 +514,8 @@ const styles = StyleSheet.create({
   },
 
   levelRank: {
-    fontSize: 12,
-    color:    'rgba(255,255,255,0.60)',
+    fontSize:  12,
+    color:     'rgba(255,255,255,0.60)',
     marginTop: 2,
   },
 
@@ -522,8 +535,8 @@ const styles = StyleSheet.create({
   },
 
   xpLabel: {
-    fontSize:   12,
-    color:      'rgba(255,255,255,0.60)',
+    fontSize: 12,
+    color:    'rgba(255,255,255,0.60)',
   },
 
   xpValue: {
@@ -605,8 +618,8 @@ const styles = StyleSheet.create({
   },
 
   badgeDesc: {
-    fontSize: 11,
-    color:    Colors.textMuted,
+    fontSize:   11,
+    color:      Colors.textMuted,
     lineHeight: 15,
   },
 
@@ -618,11 +631,11 @@ const styles = StyleSheet.create({
 
   // ── Category Bars ──────────────────────────────────────
   catCard: {
-    backgroundColor:   Colors.card,
-    borderRadius:      Radius.xl,
-    marginHorizontal:  Spacing.md,
-    padding:           Spacing.md,
-    marginBottom:      Spacing.lg,
+    backgroundColor:  Colors.card,
+    borderRadius:     Radius.xl,
+    marginHorizontal: Spacing.md,
+    padding:          Spacing.md,
+    marginBottom:     Spacing.lg,
     ...Shadow.card,
   },
 
@@ -633,8 +646,8 @@ const styles = StyleSheet.create({
   },
 
   catEmoji: {
-    fontSize: 20,
-    width:    28,
+    fontSize:  20,
+    width:     28,
     textAlign: 'center',
   },
 
@@ -672,9 +685,9 @@ const styles = StyleSheet.create({
   },
 
   catDivider: {
-    height:           1,
-    backgroundColor:  Colors.border,
-    marginVertical:   Spacing.sm,
-    marginLeft:       36,
+    height:          1,
+    backgroundColor: Colors.border,
+    marginVertical:  Spacing.sm,
+    marginLeft:      36,
   },
 });

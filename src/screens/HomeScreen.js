@@ -5,7 +5,7 @@
 // REFERENCE: docs/SMIB_Mockup.html — Version B (Student Friendly)
 // LAYOUT:
 //   - Dark gradient header with greeting, level badge, XP bar
-//   - Stats grid (3 boxes) overlapping the header
+//   - Stats grid (3 glass cards) overlapping the header
 //   - "My Projects" section with project cards
 //   - Each card: coloured emoji box + title/subtitle/progress + difficulty pill
 // ============================================================
@@ -22,6 +22,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { Colors, Spacing, Radius, Shadow } from '../theme';
 import { USER, MY_PROJECTS as PROJECTS } from '../data';
 import AnimatedNumber from '../components/AnimatedNumber';
@@ -55,12 +56,14 @@ function DiffPill({ style: diffStyle, label }) {
 
 // ----------------------------------------------------------
 // COMPONENT: PROJECT CARD
+// focusTrigger replays the stagger each time Home tab is visited
 // ----------------------------------------------------------
-function ProjectCard({ project, onPress, index = 0 }) {
-  const scale        = useRef(new Animated.Value(1)).current;
-  const staggerAnim  = useRef(new Animated.Value(0)).current;
+function ProjectCard({ project, onPress, index = 0, focusTrigger = 0 }) {
+  const scale       = useRef(new Animated.Value(1)).current;
+  const staggerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    staggerAnim.setValue(0);
     Animated.spring(staggerAnim, {
       toValue:         1,
       delay:           index * 80,
@@ -68,7 +71,7 @@ function ProjectCard({ project, onPress, index = 0 }) {
       tension:         80,
       friction:        9,
     }).start();
-  }, []);
+  }, [focusTrigger]);
 
   const onPressIn = () =>
     Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 30 }).start();
@@ -122,12 +125,14 @@ function ProjectCard({ project, onPress, index = 0 }) {
 }
 
 // ----------------------------------------------------------
-// COMPONENT: STAT BOX
+// COMPONENT: STAT BOX — glassmorphism frosted dark card
+// Sits on top of the dark header; BlurView blurs the header behind it
 // ----------------------------------------------------------
-function StatBox({ value, label, valueColor }) {
+function StatBox({ value, label, valueColor, trigger }) {
   return (
     <View style={styles.statBox}>
-      <AnimatedNumber value={value} style={[styles.statNum, { color: valueColor }]} />
+      <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
+      <AnimatedNumber value={value} style={[styles.statNum, { color: valueColor }]} trigger={trigger} />
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -140,10 +145,14 @@ export default function HomeScreen({ navigation }) {
   const xpPercent    = USER.xp / USER.xpMax;
   const xpBarAnim    = useRef(new Animated.Value(0)).current;
   const entranceAnim = useRef(new Animated.Value(0)).current;
-  const [modal, setModal] = useState(null);
+  const notifScale   = useRef(new Animated.Value(1)).current;
+  const seeAllScale  = useRef(new Animated.Value(1)).current;
+  const [modal, setModal]               = useState(null);
+  const [focusTrigger, setFocusTrigger] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
+      setFocusTrigger(t => t + 1);
       xpBarAnim.setValue(0);
       entranceAnim.setValue(0);
       Animated.parallel([
@@ -184,13 +193,17 @@ export default function HomeScreen({ navigation }) {
                 S-<Text style={styles.logoAccent}>MIB</Text>
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.notifBtn}
-              activeOpacity={0.7}
-              onPress={() => setModal({ emoji: '🔔', title: 'Notifications', message: 'No new notifications right now.\nCheck back after completing a project step!' })}
-            >
-              <Ionicons name="notifications-outline" size={20} color="#fff" />
-            </TouchableOpacity>
+            <Animated.View style={{ transform: [{ scale: notifScale }] }}>
+              <TouchableOpacity
+                style={styles.notifBtn}
+                activeOpacity={1}
+                onPressIn={() => Animated.spring(notifScale, { toValue: 0.88, useNativeDriver: true, speed: 30 }).start()}
+                onPressOut={() => Animated.spring(notifScale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start()}
+                onPress={() => setModal({ emoji: '🔔', title: 'Notifications', message: 'No new notifications right now.\nCheck back after completing a project step!' })}
+              >
+                <Ionicons name="notifications-outline" size={20} color="#fff" />
+              </TouchableOpacity>
+            </Animated.View>
           </View>
 
           {/* Greeting */}
@@ -214,19 +227,26 @@ export default function HomeScreen({ navigation }) {
 
         </View>
 
-        {/* ── STATS GRID (overlaps header) ─────────────────── */}
+        {/* ── STATS GRID (glass cards overlapping header) ───── */}
         <View style={styles.statsGrid}>
-          <StatBox value={USER.active}  label="Active"  valueColor={Colors.teal}    />
-          <StatBox value={USER.done}    label="Done"    valueColor={Colors.success}  />
-          <StatBox value={USER.badges}  label="Badges"  valueColor={Colors.warning}  />
+          <StatBox value={USER.active}  label="Active"  valueColor={Colors.teal}   trigger={focusTrigger} />
+          <StatBox value={USER.done}    label="Done"    valueColor={Colors.success} trigger={focusTrigger} />
+          <StatBox value={USER.badges}  label="Badges"  valueColor={Colors.gold}    trigger={focusTrigger} />
         </View>
 
         {/* ── PROJECTS SECTION ─────────────────────────────── */}
         <View style={styles.sectionHead}>
           <Text style={styles.sectionTitle}>My Projects 📋</Text>
-          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Explore')}>
-            <Text style={styles.seeAll}>See All →</Text>
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale: seeAllScale }] }}>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPressIn={() => Animated.spring(seeAllScale, { toValue: 0.92, useNativeDriver: true, speed: 30 }).start()}
+              onPressOut={() => Animated.spring(seeAllScale, { toValue: 1,    useNativeDriver: true, speed: 20 }).start()}
+              onPress={() => navigation.navigate('Explore')}
+            >
+              <Text style={styles.seeAll}>See All →</Text>
+            </TouchableOpacity>
+          </Animated.View>
         </View>
 
         <View style={styles.cardList}>
@@ -235,6 +255,7 @@ export default function HomeScreen({ navigation }) {
               key={project.id}
               project={project}
               index={i}
+              focusTrigger={focusTrigger}
               onPress={() => navigation.navigate('ProjectDetail', { project })}
             />
           ))}
@@ -268,17 +289,13 @@ const styles = StyleSheet.create({
 
   // ── Header ─────────────────────────────────────────────
   header: {
-    backgroundColor: Colors.dark,
-    backgroundImage: undefined,
-    paddingHorizontal: Spacing.md,
-    paddingTop:        Spacing.md,
-    paddingBottom:     Spacing.xxl,
+    paddingHorizontal:       Spacing.md,
+    paddingTop:              Spacing.md,
+    paddingBottom:           Spacing.xxl,
     borderBottomLeftRadius:  28,
     borderBottomRightRadius: 28,
-    overflow: 'hidden',
-    // Simulate the linear gradient from mockup (#1a1a2e → #16213e)
-    // expo-linear-gradient would be ideal but keeping plain RN for now
-    backgroundColor: '#1a1a2e',
+    overflow:                'hidden',
+    backgroundColor:         '#1a1a2e',
   },
 
   // Decorative circles (depth effect)
@@ -289,7 +306,7 @@ const styles = StyleSheet.create({
     width:           160,
     height:          160,
     borderRadius:    80,
-    backgroundColor: 'rgba(244, 196, 48, 0.10)',  // gold tint
+    backgroundColor: 'rgba(244, 196, 48, 0.10)',
   },
   decCircleBottom: {
     position:        'absolute',
@@ -298,7 +315,7 @@ const styles = StyleSheet.create({
     width:           140,
     height:          140,
     borderRadius:    70,
-    backgroundColor: 'rgba(14, 165, 233, 0.08)',  // teal tint
+    backgroundColor: 'rgba(14, 165, 233, 0.08)',
   },
 
   headerTop: {
@@ -375,16 +392,16 @@ const styles = StyleSheet.create({
   },
 
   levelBadge: {
-    backgroundColor: Colors.gold,
-    borderRadius:    Radius.full,
+    backgroundColor:   Colors.gold,
+    borderRadius:      Radius.full,
     paddingHorizontal: 10,
-    paddingVertical:    4,
+    paddingVertical:   4,
   },
 
   levelText: {
-    fontSize:   11,
-    fontWeight: '800',
-    color:      '#1a1a2e',
+    fontSize:      11,
+    fontWeight:    '800',
+    color:         '#1a1a2e',
     letterSpacing: 0.5,
   },
 
@@ -406,26 +423,27 @@ const styles = StyleSheet.create({
     height:          '100%',
     backgroundColor: Colors.gold,
     borderRadius:    Radius.full,
-    // Gold → orange gradient feel (approximated without expo-linear-gradient)
   },
 
-  // ── Stats Grid ─────────────────────────────────────────
+  // ── Stats Grid — glass cards overlapping dark header ────
   statsGrid: {
-    flexDirection:  'row',
+    flexDirection:    'row',
     marginHorizontal: Spacing.md,
-    marginTop:      -22,       // Overlaps the header bottom
-    gap:            Spacing.sm,
-    marginBottom:   Spacing.md,
-    zIndex:         2,
+    marginTop:        -22,
+    gap:              Spacing.sm,
+    marginBottom:     Spacing.md,
+    zIndex:           2,
   },
 
   statBox: {
-    flex:            1,
-    backgroundColor: Colors.card,
-    borderRadius:    Radius.lg,
-    paddingVertical: 12,
-    alignItems:      'center',
-    ...Shadow.card,
+    flex:             1,
+    borderRadius:     Radius.lg,
+    paddingVertical:  12,
+    alignItems:       'center',
+    overflow:         'hidden',
+    backgroundColor:  'rgba(255,255,255,0.06)',
+    borderWidth:      1,
+    borderColor:      'rgba(255,255,255,0.16)',
   },
 
   statNum: {
@@ -434,12 +452,12 @@ const styles = StyleSheet.create({
   },
 
   statLabel: {
-    fontSize:   10,
-    fontWeight: '600',
-    color:      Colors.textMuted,
+    fontSize:      10,
+    fontWeight:    '600',
+    color:         'rgba(255,255,255,0.65)',
     textTransform: 'uppercase',
-    letterSpacing:  0.5,
-    marginTop:  2,
+    letterSpacing: 0.5,
+    marginTop:     2,
   },
 
   // ── Section header ─────────────────────────────────────

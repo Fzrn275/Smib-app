@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S-MIB Wireframes — Auth Screens</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #0C1A2E;
+    --teal:   #0E7490;
+    --yellow: #F59E0B;
+    --orange: #EA580C;
+    --green:  #166534;
+    --red:    #EF4444;
+    --cyan:   #67E8F9;
+    --r-sm:   8px;
+    --r-md:   12px;
+    --r-lg:   18px;
+    --r-xl:   24px;
+    --r-pill: 999px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: linear-gradient(135deg, #064E3B 0%, #0E7490 30%, #0C4A6E 55%, #78350F 80%, #1A3A1A 100%);
+    background-attachment: fixed;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 60px;
+  }
+
+  /* Page header */
+  .page-title {
+    text-align: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 800;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .page-sub {
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; color: rgba(255,255,255,0.25);
+    margin-bottom: 48px; letter-spacing: 1px;
+  }
+
+  /* Screen row layout */
+  .screens-row {
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  /* Phone frame */
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .screen-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 800;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .screen-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px; color: rgba(255,255,255,0.3);
+    letter-spacing: 1px;
+  }
+  .phone {
+    width: 375px;
+    background: linear-gradient(135deg, #064E3B 0%, #0E7490 30%, #0C4A6E 55%, #78350F 80%, #1A3A1A 100%);
+    border-radius: 44px;
+    border: 8px solid #0C1A2E;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.08);
+    position: relative;
+  }
+  .status-bar {
+    height: 44px;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 12px; font-weight: 600;
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* ── SHARED COMPONENTS ── */
+  .screen-content { padding: 0 0 32px; }
+
+  /* Glass input */
+  .inp {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(5px);
+    border-top: 1px solid rgba(255,255,255,0.3);
+    border-left: 1px solid rgba(255,255,255,0.2);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--r-md);
+    padding: 13px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; color: rgba(255,255,255,0.9);
+    outline: none;
+  }
+  .inp::placeholder { color: rgba(255,255,255,0.3); }
+  .inp.focused {
+    border-top-color: rgba(103,232,249,0.7);
+    border-left-color: rgba(103,232,249,0.5);
+    box-shadow: 0 0 0 3px rgba(14,116,144,0.2);
+  }
+  .inp-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 6px; display: block;
+  }
+  .inp-group { margin-bottom: 16px; }
+
+  /* Primary button */
+  .btn-primary {
+    width: 100%;
+    background: var(--teal);
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 800;
+    padding: 15px;
+    border: none; border-radius: var(--r-md);
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(14,116,144,0.5);
+    letter-spacing: 0.3px;
+  }
+  .btn-secondary {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.8);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 700;
+    padding: 13px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: var(--r-md);
+    cursor: pointer;
+  }
+
+  /* Divider */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0;
+  }
+  .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+  .divider-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px; color: rgba(255,255,255,0.3);
+  }
+
+  /* Link text */
+  .link-row {
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; color: rgba(255,255,255,0.45);
+    margin-top: 20px;
+  }
+  .link-row a { color: var(--cyan); font-weight: 600; text-decoration: none; }
+
+  /* Password toggle */
+  .inp-wrap { position: relative; }
+  .inp-eye {
+    position: absolute; right: 14px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px; opacity: 0.45; cursor: pointer;
+  }
+  .inp-wrap .inp { padding-right: 44px; }
+
+  /* Error msg */
+  .inp-error {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px; color: #FCA5A5;
+    margin-top: 5px;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Role selector */
+  .role-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 20px;
+  }
+  .role-card {
+    background: rgba(255,255,255,0.06);
+    border-top: 1px solid rgba(255,255,255,0.2);
+    border-left: 1px solid rgba(255,255,255,0.15);
+    border-right: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-radius: var(--r-lg);
+    padding: 14px 12px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .role-card.selected {
+    background: rgba(14,116,144,0.2);
+    border-top-color: rgba(103,232,249,0.5);
+    border-left-color: rgba(103,232,249,0.35);
+    box-shadow: 0 0 0 1.5px rgba(14,116,144,0.4);
+  }
+  .role-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+  .role-name {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 800;
+    color: rgba(255,255,255,0.85);
+  }
+  .role-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px; color: rgba(255,255,255,0.4);
+    margin-top: 3px;
+  }
+  .role-card.selected .role-name { color: var(--cyan); }
+
+  /* Step indicator */
+  .step-row {
+    display: flex; justify-content: center; gap: 8px;
+    padding: 16px 0 20px;
+  }
+  .step-dot {
+    width: 8px; height: 8px; border-radius: 999px;
+    background: rgba(255,255,255,0.15);
+    transition: all 0.2s;
+  }
+  .step-dot.active {
+    width: 24px;
+    background: var(--yellow);
+  }
+  .step-dot.done { background: var(--teal); }
+
+  /* Google SSO button */
+  .btn-sso {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.8);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 13px;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+
+  /* Forgot password */
+  .forgot {
+    text-align: right;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; color: var(--cyan);
+    margin-top: 6px; cursor: pointer;
+  }
+
+  /* Auth header section */
+  .auth-hero {
+    background: linear-gradient(160deg, #0C1A2E 0%, #0A2A20 60%, #0E4A3A 100%);
+    padding: 48px 24px 36px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0 0 36px 36px;
+  }
+  .auth-hero::before {
+    content: '';
+    position: absolute; top: -60px; right: -60px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(245,158,11,0.07);
+  }
+  .auth-hero::after {
+    content: '';
+    position: absolute; bottom: -40px; left: -40px;
+    width: 160px; height: 160px; border-radius: 50%;
+    background: rgba(14,116,144,0.06);
+  }
+  .auth-logo {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin-bottom: 24px; position: relative; z-index: 1;
+  }
+  .auth-logo-icon {
+    width: 48px; height: 48px;
+    background: var(--yellow);
+    border-radius: var(--r-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+  }
+  .auth-logo-name {
+    font-family: 'Nunito', sans-serif;
+    font-size: 26px; font-weight: 900; color: white;
+  }
+  .auth-logo-name span { color: var(--yellow); }
+  .auth-tagline {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; color: rgba(255,255,255,0.45);
+    position: relative; z-index: 1;
+    line-height: 1.6;
+  }
+
+  .auth-body { padding: 28px 24px 0; }
+
+  .auth-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px; font-weight: 900;
+    color: rgba(255,255,255,0.95);
+    margin-bottom: 4px;
+  }
+  .auth-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; color: rgba(255,255,255,0.4);
+    margin-bottom: 24px;
+  }
+
+  /* Annotation system */
+  .annotations {
+    margin-top: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .ann {
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .ann-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(245,158,11,0.2);
+    border: 1px solid rgba(245,158,11,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 10px; font-weight: 900; color: var(--yellow);
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .ann-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px; color: rgba(255,255,255,0.5);
+    line-height: 1.5;
+  }
+  .ann-text strong { color: rgba(255,255,255,0.75); font-weight: 600; }
+
+  /* Screen switcher */
+  .phone-screen { display: none; }
+  .phone-screen.active { display: block; }
+
+  /* Success state */
+  .success-screen {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 500px; padding: 40px 24px;
+    text-align: center;
+  }
+  .success-icon {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, #0E7490, #064E3B);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; margin-bottom: 24px;
+    box-shadow: 0 0 32px rgba(14,116,144,0.4);
+    border: 2px solid rgba(103,232,249,0.3);
+  }
+  .success-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 24px; font-weight: 900;
+    color: white; margin-bottom: 8px;
+  }
+  .success-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    line-height: 1.6; margin-bottom: 32px;
+  }
+
+  /* Forgot password modal overlay */
+  .fp-modal {
+    position: absolute; inset: 0;
+    background: rgba(6,14,12,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10;
+    display: flex; align-items: flex-end;
+    border-radius: 36px;
+    overflow: hidden;
+  }
+  .fp-sheet {
+    width: 100%;
+    background: linear-gradient(160deg, #0C1A2E, #0A2A20);
+    border-top: 1px solid rgba(255,255,255,0.15);
+    border-radius: 24px 24px 0 0;
+    padding: 24px 24px 36px;
+  }
+  .fp-handle {
+    width: 40px; height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 999px;
+    margin: 0 auto 20px;
+  }
+  .fp-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 18px; font-weight: 900;
+    color: white; margin-bottom: 6px;
+  }
+  .fp-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    margin-bottom: 20px; line-height: 1.5;
+  }
+
+  /* Error state */
+  .login-error {
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: var(--r-md);
+    padding: 10px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; color: #FCA5A5;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* Interaction hint */
+  .interact-hint {
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px; color: rgba(255,255,255,0.25);
+    letter-spacing: 0.5px; margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">S-MIB Wireframes</div>
+<div class="page-sub">Auth Screens · Group 1 of 3</div>
+
+<div class="screens-row">
+
+  <!-- ══════════════════════════════════
+       SCREEN 1 — LOGIN
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <div class="screen-num">Screen 01 / 29</div>
+    <div class="screen-label">Login</div>
+    <div class="interact-hint">👆 Click Sign In to see error state · Click Forgot password for reset sheet</div>
+    <div class="phone" id="login-phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="screen-content">
+
+        <!-- Screen: Default login -->
+        <div class="phone-screen active" id="login-default">
+          <div class="auth-hero">
+            <div class="auth-logo">
+              <div class="auth-logo-icon">🦅</div>
+              <div class="auth-logo-name">S-<span>MIB</span></div>
+            </div>
+            <div class="auth-tagline">
+              Sarawak Maker-In-A-Box<br>
+              Learn STEM. Build real things.
+            </div>
+          </div>
+          <div class="auth-body">
+            <div class="auth-title">Welcome back</div>
+            <div class="auth-sub">Sign in to continue your journey</div>
+            <div class="inp-group">
+              <label class="inp-label">Email address</label>
+              <input class="inp focused" placeholder="fazrin@email.com" value="fazrin@email.com" readonly />
+            </div>
+            <div class="inp-group">
+              <label class="inp-label">Password</label>
+              <div class="inp-wrap">
+                <input class="inp" type="password" placeholder="••••••••" value="••••••••" readonly />
+                <span class="inp-eye">👁</span>
+              </div>
+              <div class="forgot" onclick="showForgotPassword()">Forgot password?</div>
+            </div>
+            <button class="btn-primary" onclick="showLoginError()">Sign In</button>
+        <div style="text-align:center;padding:6px 0;font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,0.3);font-style:italic;">↳ Shows loading spinner while authenticating</div>
+            <div class="divider">
+              <div class="divider-line"></div>
+              <span class="divider-text">or continue with</span>
+              <div class="divider-line"></div>
+            </div>
+            <button class="btn-sso"><span>🌐</span> Continue with Google</button>
+            <div class="link-row">
+              Don't have an account? <a href="#" onclick="return false;">Sign up</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Screen: Login error state -->
+        <div class="phone-screen" id="login-error">
+          <div class="auth-hero">
+            <div class="auth-logo">
+              <div class="auth-logo-icon">🦅</div>
+              <div class="auth-logo-name">S-<span>MIB</span></div>
+            </div>
+            <div class="auth-tagline">Sarawak Maker-In-A-Box<br>Learn STEM. Build real things.</div>
+          </div>
+          <div class="auth-body">
+            <div class="auth-title">Welcome back</div>
+            <div class="auth-sub">Sign in to continue your journey</div>
+            <div class="login-error">⚠ Incorrect email or password. Please try again.</div>
+            <div class="inp-group">
+              <label class="inp-label">Email address</label>
+              <input class="inp" style="border-top-color:rgba(239,68,68,0.7);border-left-color:rgba(239,68,68,0.5);box-shadow:0 0 0 3px rgba(239,68,68,0.15);" value="wrong@email.com" readonly />
+            </div>
+            <div class="inp-group">
+              <label class="inp-label">Password</label>
+              <div class="inp-wrap">
+                <input class="inp" type="password" value="•••••" readonly style="border-top-color:rgba(239,68,68,0.5);" />
+                <span class="inp-eye">👁</span>
+              </div>
+              <div class="forgot" onclick="showForgotPassword()">Forgot password?</div>
+            </div>
+            <button class="btn-primary" onclick="switchScreen('login-default')">Try Again</button>
+            <div class="divider"><div class="divider-line"></div><span class="divider-text">or continue with</span><div class="divider-line"></div></div>
+            <button class="btn-sso"><span>🌐</span> Continue with Google</button>
+          </div>
+        </div>
+
+
+
+      <!-- Forgot password bottom sheet — positioned absolute over login phone -->
+      <div class="fp-modal" id="fp-modal" style="display:none;">
+        <div class="fp-sheet">
+          <div class="fp-handle"></div>
+          <div class="fp-title">Reset password</div>
+          <div class="fp-sub">Enter your email and we'll send you a link to reset your password.</div>
+          <div class="inp-group">
+            <label class="inp-label">Email address</label>
+            <input class="inp focused" placeholder="fazrin@email.com" readonly />
+          </div>
+          <button class="btn-primary" style="margin-bottom:10px;" onclick="hideForgotPassword()">Send Reset Link</button>
+          <button class="btn-secondary" onclick="hideForgotPassword()">Cancel</button>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <div class="annotations">
+      <div class="ann"><div class="ann-num">1</div><div class="ann-text"><strong>Hero section</strong> — Full Sarawak-branded header with hornbill logo and tagline. Same gradient as app header.</div></div>
+      <div class="ann"><div class="ann-num">2</div><div class="ann-text"><strong>Email + Password</strong> — Glass inputs with focused teal ring. Password has show/hide toggle.</div></div>
+      <div class="ann"><div class="ann-num">3</div><div class="ann-text"><strong>Forgot password</strong> — Right-aligned cyan link below password field.</div></div>
+      <div class="ann"><div class="ann-num">4</div><div class="ann-text"><strong>Google SSO</strong> — Secondary option below main CTA with divider.</div></div>
+      <div class="ann"><div class="ann-num">5</div><div class="ann-text"><strong>Sign up link</strong> — Routes to Register Screen (Screen 02).</div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SCREEN 2 — REGISTER (STEP 1 of 2)
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <div class="screen-num">Screen 02 / 29</div>
+    <div class="screen-label">Register — Step 1</div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="screen-content">
+
+        <div class="auth-hero">
+          <div class="auth-logo">
+            <div class="auth-logo-icon">🦅</div>
+            <div class="auth-logo-name">S-<span>MIB</span></div>
+          </div>
+          <div class="auth-tagline">
+            Join thousands of Sarawak students<br>building real STEM projects
+          </div>
+        </div>
+
+        <div class="auth-body">
+          <!-- Step indicator -->
+          <div class="step-row">
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+          </div>
+
+          <div class="auth-title">Create account</div>
+          <div class="auth-sub">Step 1 — Choose your role</div>
+
+          <div class="role-grid">
+            <div class="role-card selected">
+              <span class="role-icon">📚</span>
+              <div class="role-name">Learner</div>
+              <div class="role-desc">I want to build STEM projects</div>
+            </div>
+            <div class="role-card">
+              <span class="role-icon">🛠️</span>
+              <div class="role-name">Creator</div>
+              <div class="role-desc">I want to upload projects</div>
+            </div>
+            <div class="role-card">
+              <span class="role-icon">👤</span>
+              <div class="role-name">Parent</div>
+              <div class="role-desc">I monitor my child</div>
+            </div>
+            <div class="role-card">
+              <span class="role-icon">🤝</span>
+              <div class="role-name">Mentor</div>
+              <div class="role-desc">I guide students</div>
+            </div>
+          </div>
+
+          <button class="btn-primary" onclick="switchReg('reg-step2')">Continue →</button>
+          <div class="link-row">
+            Already have an account? <a href="#" onclick="return false;">Sign in</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotations">
+      <div class="ann"><div class="ann-num">1</div><div class="ann-text"><strong>Step indicator</strong> — Two dots. Active dot is wider amber pill. Completed dot turns teal.</div></div>
+      <div class="ann"><div class="ann-num">2</div><div class="ann-text"><strong>Role grid</strong> — 2×2 glass cards. Selected card has teal border ring. Only one selectable at a time.</div></div>
+      <div class="ann"><div class="ann-num">3</div><div class="ann-text"><strong>Roles</strong> — Learner (default selected), Creator, Parent, Mentor. Each has icon + name + one-line description.</div></div>
+      <div class="ann"><div class="ann-num">4</div><div class="ann-text"><strong>Continue →</strong> — Click to see Step 2. Selected role is passed as navigation state.</div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SCREEN 2B — REGISTER (STEP 2 of 2)
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <div class="screen-num">Screen 02b / 29</div>
+    <div class="screen-label">Register — Step 2</div>
+    <div class="interact-hint">👆 Click Continue to see success state</div>
+    <div class="phone" id="reg-phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="screen-content">
+
+        <!-- Step 1 — embedded for Back button -->
+        <div class="phone-screen" id="reg-step1-back">
+          <div class="auth-hero" style="padding:32px 24px 28px;">
+            <div class="auth-logo" style="margin-bottom:16px;"><div class="auth-logo-icon">🦅</div><div class="auth-logo-name">S-<span>MIB</span></div></div>
+            <div class="auth-tagline">Join thousands of Sarawak students building real STEM projects</div>
+          </div>
+          <div class="auth-body">
+            <div class="step-row"><div class="step-dot active"></div><div class="step-dot"></div></div>
+            <div class="auth-title">Create account</div>
+            <div class="auth-sub">Step 1 — Choose your role</div>
+            <div class="role-grid">
+              <div class="role-card selected"><span class="role-icon">📚</span><div class="role-name">Learner</div><div class="role-desc">I want to build STEM projects</div></div>
+              <div class="role-card"><span class="role-icon">🛠️</span><div class="role-name">Creator</div><div class="role-desc">I want to upload projects</div></div>
+              <div class="role-card"><span class="role-icon">👤</span><div class="role-name">Parent</div><div class="role-desc">I monitor my child</div></div>
+              <div class="role-card"><span class="role-icon">🤝</span><div class="role-name">Mentor</div><div class="role-desc">I guide students</div></div>
+            </div>
+            <button class="btn-primary" onclick="switchReg('reg-step2')">Continue →</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Fill details -->
+        <div class="phone-screen active" id="reg-step2">
+          <div class="auth-hero" style="padding:32px 24px 28px;">
+            <div class="auth-logo" style="margin-bottom:16px;">
+              <div class="auth-logo-icon">🦅</div>
+              <div class="auth-logo-name">S-<span>MIB</span></div>
+            </div>
+            <div class="auth-tagline">Almost there — fill in your details</div>
+          </div>
+          <div class="auth-body">
+            <div class="step-row">
+              <div class="step-dot done"></div>
+              <div class="step-dot active"></div>
+            </div>
+            <div class="auth-title">Your details</div>
+            <div class="auth-sub">Step 2 — Account information</div>
+            <div class="inp-group">
+              <label class="inp-label">Full name</label>
+              <input class="inp" placeholder="Fazrin Ezan Darwish" readonly />
+            </div>
+            <div class="inp-group">
+              <label class="inp-label">Email address</label>
+              <input class="inp focused" placeholder="fazrin@email.com" readonly />
+            </div>
+            <div class="inp-group">
+              <label class="inp-label">School name</label>
+              <input class="inp" placeholder="e.g. SMK Bandar Kuching" readonly />
+            </div>
+            <div class="inp-group">
+              <label class="inp-label">Grade / Form level</label>
+              <div class="inp" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                <span style="color:rgba(255,255,255,0.3);">Select grade / form level...</span>
+                <span style="opacity:0.4;">▾</span>
+              </div>
+            </div>
+            <div class="inp-group">
+              <label class="inp-label">Password</label>
+              <div class="inp-wrap">
+                <input class="inp" type="password" placeholder="Min. 8 characters" readonly />
+                <span class="inp-eye">👁</span>
+              </div>
+            </div>
+            <!-- T&C checkbox -->
+            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;">
+              <div style="width:18px;height:18px;border-radius:5px;border:1.5px solid rgba(103,232,249,0.5);background:rgba(14,116,144,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+                <span style="color:#67E8F9;font-size:11px;font-weight:700;">✓</span>
+              </div>
+              <span style="font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);line-height:1.5;">
+                I agree to the <span style="color:#67E8F9;">Terms of Service</span> and <span style="color:#67E8F9;">Privacy Policy</span>
+              </span>
+            </div>
+            <button class="btn-primary" style="margin-bottom:10px;" onclick="switchReg('reg-success')">Create Account</button>
+            <button class="btn-secondary" onclick="switchReg('reg-step1-back')">← Back</button>
+          </div>
+        </div>
+
+        <!-- Success state -->
+        <div class="phone-screen" id="reg-success">
+          <div class="success-screen">
+            <div class="success-icon">🦅</div>
+            <div class="success-title">Welcome to S-MIB!</div>
+            <div class="success-sub">
+              Your account has been created.<br>
+              You are now a <strong style="color:#67E8F9;">Learner</strong>.<br><br>
+              Let's start your first project.
+            </div>
+            <button class="btn-primary" style="width:100%;">Start Exploring →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotations">
+      <div class="ann"><div class="ann-num">1</div><div class="ann-text"><strong>Step dot 1 turns teal</strong> — confirms role step is complete. Active dot is on step 2.</div></div>
+      <div class="ann"><div class="ann-num">2</div><div class="ann-text"><strong>Grade / Form level</strong> — Dropdown selector. Options: Year 4, Year 5, Year 6, Form 1, Form 2, Form 3, Form 4, Form 5, Form 6, Others. Used for leaderboard grouping and content matching.</div></div>
+      <div class="ann"><div class="ann-num">3</div><div class="ann-text"><strong>T&C checkbox</strong> — Must be checked before Create Account button is enabled. Links to Terms and Privacy Policy.</div></div>
+      <div class="ann"><div class="ann-num">4</div><div class="ann-text"><strong>Create Account</strong> — Click to see success state. Calls Supabase Auth signUp() then inserts user row.</div></div>
+      <div class="ann"><div class="ann-num">5</div><div class="ann-text"><strong>Success screen</strong> — Shows welcome message with confirmed role. "Start Exploring →" routes to Home screen.</div></div>
+    </div>
+  </div>
+
+</div>
+<script>
+  // Login screen switching
+  function switchScreen(id) {
+    document.querySelectorAll('#login-phone .phone-screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  }
+  function showLoginError() {
+    switchScreen('login-error');
+  }
+  function showForgotPassword() {
+    document.getElementById('fp-modal').style.display = 'flex';
+  }
+  function hideForgotPassword() {
+    document.getElementById('fp-modal').style.display = 'none';
+  }
+
+  // Register screen switching
+  function switchReg(id) {
+    document.querySelectorAll('#reg-phone .phone-screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  }
+
+  // Role card selection
+  document.querySelectorAll('.role-card').forEach(card => {
+    card.addEventListener('click', () => {
+      card.closest('.role-grid').querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+</script>
+</body>
+</html>

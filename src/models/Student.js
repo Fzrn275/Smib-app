@@ -1,148 +1,100 @@
 // ============================================================
 // FILE: src/models/Student.js
-// PURPOSE: Represents a learner in the S-MIB app.
-//          A Student IS a User — they inherit everything from
-//          the User base class, then add student-specific
-//          behaviour on top.
+// PURPOSE: Represents a learner (junior or senior) in S-MIB.
+//          Extends User with gamification data: XP, level, school.
+//
+// INHERITANCE CHAIN: Student → User
 //
 // OOP CONCEPTS DEMONSTRATED:
 //   - Inheritance   : extends User, calls super() in constructor
-//   - Encapsulation : Student's own attributes also use # (private)
+//   - Encapsulation : Student's own fields also use # (private)
+//
+// DATABASE MAPPING: users table
+//   xp, level, school_name, grade_level (plus inherited user fields)
 // ============================================================
 
-// ----------------------------------------------------------
-// IMPORT
-//
-// Before we can extend User, we must import it from its file.
-// The './' means "look in the same folder as this file".
-// ----------------------------------------------------------
 import User from './User';
 
 class Student extends User {
-  // This line means: "Student inherits everything from User".
-  // Student automatically gets all of User's methods:
-  //   getName(), getEmail(), login(), logout(), etc.
-  // We do NOT need to rewrite any of those here.
 
-  // ----------------------------------------------------------
-  // STUDENT-SPECIFIC PRIVATE ATTRIBUTES (Encapsulation)
-  //
-  // These are extra fields that only a Student has.
-  // A regular User or Teacher does not have these.
-  // ----------------------------------------------------------
-  #gradeLevel;         // e.g. 'Year 4', 'Year 5', 'Form 1'
-  #enrolledProjects;   // Array: list of project IDs this student has started
-  #progressList;       // Array: list of Progress objects (tracks step completion)
-  #achievementList;    // Array: list of Achievement objects earned
+  // Student-specific private fields
+  #xp;           // Total XP earned (drives level calculation)
+  #level;        // Current level 1–10
+  #school;       // School name (e.g. "SMK Kuching")
+  #gradeLevel;   // e.g. "Year 5", "Form 2"
 
   // ----------------------------------------------------------
   // CONSTRUCTOR
   //
-  // When we create a new Student, we need two things:
-  //   1. All the User fields (userID, name, age, email, password, role)
-  //   2. The student-specific gradeLevel
+  // super() must be called first — it sets up User's private fields.
   //
-  // IMPORTANT: super() MUST be called first.
-  // super() runs the User constructor and sets up the shared
-  // private fields (#name, #email, etc.) in the parent class.
-  // Without super(), 'this' cannot be used and an error occurs.
-  //
-  // Example of creating a Student:
-  //   const s = new Student('s001', 'Siti', 11, 'siti@email.com', 'pass123', 'junior_learner', 'Year 5');
+  // Example:
+  //   const s = new Student('uuid-001', 'Siti', 'siti@email.com',
+  //                         'junior_learner', null, 150, 1, 'SMK Kuching', 'Year 5');
   // ----------------------------------------------------------
-  constructor(userID, name, age, email, password, role, gradeLevel) {
-    super(userID, name, age, email, password, role);
-    // ^ super() calls the User constructor with the shared fields.
-    //   After this line, all User private fields are set up.
-
-    // Now we set up the Student-specific fields:
-    this.#gradeLevel = gradeLevel;
-    this.#enrolledProjects = [];  // starts as an empty array
-    this.#progressList = [];      // no progress yet
-    this.#achievementList = [];   // no achievements yet
+  constructor(id, name, email, role, avatarUrl, xp, level, school, gradeLevel) {
+    super(id, name, email, role, avatarUrl);
+    this.#xp         = xp         ?? 0;
+    this.#level      = level      ?? 1;
+    this.#school     = school     ?? '';
+    this.#gradeLevel = gradeLevel ?? '';
   }
 
   // ----------------------------------------------------------
-  // GETTER for gradeLevel
-  // ----------------------------------------------------------
-  getGradeLevel() {
-    return this.#gradeLevel;
-  }
-
-  // ----------------------------------------------------------
-  // METHODS (Student Behaviours)
+  // GETTERS
   // ----------------------------------------------------------
 
-  // Adds a project to this student's enrolled list.
-  // projectID is the unique identifier of the project (e.g. 'led-torch').
-  // We check it is not already enrolled to avoid duplicates.
-  enrollProject(projectID) {
-    if (!this.#enrolledProjects.includes(projectID)) {
-      this.#enrolledProjects.push(projectID);
-      return `${this.getName()} enrolled in project: ${projectID}`;
+  get xp()         { return this.#xp; }
+  get level()      { return this.#level; }
+  get school()     { return this.#school; }
+  get gradeLevel() { return this.#gradeLevel; }
+
+  // ----------------------------------------------------------
+  // SETTERS
+  // ----------------------------------------------------------
+
+  set xp(value) {
+    if (typeof value === 'number' && value >= 0) {
+      this.#xp = value;
+      // Recalculate level whenever XP changes
+      this.#level = Math.min(Math.floor(value / 1000) + 1, 10);
     }
-    return `${this.getName()} is already enrolled in: ${projectID}`;
   }
 
-  // Returns the full list of project IDs this student is enrolled in.
-  getEnrolledProjects() {
-    return this.#enrolledProjects;
+  // ----------------------------------------------------------
+  // METHODS
+  // ----------------------------------------------------------
+
+  // XP within the current level (0–999) — used for the XP bar display
+  getXpInLevel() {
+    return this.#xp % 1000;
   }
 
-  // Adds a Progress object to this student's progress list.
-  // Called when a student starts or updates a project's progress.
-  addProgress(progressObject) {
-    this.#progressList.push(progressObject);
-    return `Progress recorded for ${this.getName()}.`;
+  // How much XP is needed to reach the next level
+  getXpToNextLevel() {
+    return 1000 - this.getXpInLevel();
   }
 
-  // Returns the full list of Progress objects for this student.
-  viewProgress() {
-    if (this.#progressList.length === 0) {
-      return `${this.getName()} has no progress recorded yet.`;
-    }
-    return this.#progressList;
+  // Human-readable rank title for the current level
+  getRankTitle() {
+    const titles = [
+      'Curious Maker', 'Junior Builder', 'STEM Explorer', 'Maker Apprentice',
+      'Project Maker', 'Circuit Crafter', 'Innovation Scout', 'STEM Champion',
+      'Master Builder', 'Sarawak Maker',
+    ];
+    return titles[Math.max(0, this.#level - 1)];
   }
 
-  // Adds an Achievement object to this student's achievement list.
-  // Called when a student completes a project or reaches a milestone.
-  addAchievement(achievementObject) {
-    this.#achievementList.push(achievementObject);
-    return `Achievement added for ${this.getName()}.`;
-  }
-
-  // Returns all achievements this student has earned.
-  viewAchievements() {
-    if (this.#achievementList.length === 0) {
-      return `${this.getName()} has not earned any achievements yet.`;
-    }
-    return this.#achievementList;
-  }
-
-  // Returns a list of available projects the student can browse.
-  // In a real app, this would fetch from Supabase.
-  // For now, it returns a message describing what it would do.
-  browseProjects() {
-    return `${this.getName()} is browsing available STEM projects (Grade: ${this.#gradeLevel}).`;
-  }
-
-  // Returns all details about this student, including the
-  // inherited User details (via super) plus Student-specific data.
   getDetails() {
     return {
       ...super.getDetails(),
-      // The '...' spread operator copies all fields from
-      // the parent getDetails() result, then we add more:
-      gradeLevel:       this.#gradeLevel,
-      enrolledProjects: this.#enrolledProjects,
-      achievementCount: this.#achievementList.length,
+      xp:         this.#xp,
+      level:      this.#level,
+      rankTitle:  this.getRankTitle(),
+      school:     this.#school,
+      gradeLevel: this.#gradeLevel,
     };
   }
 }
 
-// ----------------------------------------------------------
-// EXPORT
-// Makes Student available for import in other files.
-// JuniorLearner.js and SeniorLearner.js will import from here.
-// ----------------------------------------------------------
 export default Student;

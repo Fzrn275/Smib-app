@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S-MIB Wireframes — Learner Screens</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#0C1A2E; --teal:#0E7490; --yellow:#F59E0B;
+    --orange:#EA580C; --green:#166534; --red:#EF4444;
+    --cyan:#67E8F9; --success:#22C55E;
+    --r-sm:8px; --r-md:12px; --r-lg:18px; --r-xl:24px; --r-pill:999px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);
+    background-attachment: fixed;
+    font-family: 'Inter', sans-serif;
+    padding: 40px 20px 60px;
+  }
+
+  /* Page labels */
+  .page-title { text-align:center; font-family:'Nunito',sans-serif; font-size:13px; font-weight:800; color:rgba(255,255,255,0.4); letter-spacing:3px; text-transform:uppercase; margin-bottom:6px; }
+  .page-sub { text-align:center; font-family:'Inter',sans-serif; font-size:12px; color:rgba(255,255,255,0.25); margin-bottom:48px; letter-spacing:1px; }
+
+  /* Layout */
+  .screens-row { display:flex; gap:40px; justify-content:center; flex-wrap:wrap; align-items:flex-start; }
+  .phone-wrap { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .screen-num { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.3); letter-spacing:1px; }
+  .screen-label { font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; color:rgba(255,255,255,0.6); letter-spacing:1px; text-transform:uppercase; }
+  .interact-hint { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.25); }
+
+  /* ── PHONE FRAME ──
+     Fixed height. overflow:hidden. Nothing escapes.
+     All screens are display:none except the active one. */
+  .phone {
+    width: 375px;
+    height: 720px;
+    background: linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);
+    border-radius: 44px;
+    border: 8px solid #0C1A2E;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.08);
+  }
+
+  /* ── SCREEN SWITCHING ──
+     Simple. Hidden or visible. No flex, no height tricks. */
+  .screen { display:none; position:absolute; inset:0; overflow:hidden; }
+  .screen.active { display:block; }
+
+  /* Status bar */
+  .sbar { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; font-weight:600; color:rgba(255,255,255,0.7); flex-shrink:0; }
+
+  /* ── BOTTOM NAV ── Exactly as style guide */
+  .bnav {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border-radius: var(--r-pill);
+    border-top: 2px solid rgba(255,255,255,0.95);
+    border-left: 2px solid rgba(255,255,255,0.85);
+    border-right: 1.5px solid rgba(255,255,255,0.3);
+    border-bottom: 1.5px solid rgba(255,255,255,0.3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    gap: 2px;
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .nb { display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 14px; border-radius:var(--r-pill); cursor:pointer; font-family:'Inter',sans-serif; font-size:9px; font-weight:700; color:rgba(255,255,255,0.55); min-width:58px; }
+  .nb.on { background:#0C1A2E; color:#F59E0B; box-shadow:0 4px 16px rgba(12,26,46,0.6); }
+  .ni { font-size:18px; display:block; }
+  .nb.on .ni { font-size:21px; }
+
+  /* ── SHARED COMPONENTS ── */
+
+  /* App header */
+  .hdr {
+    background: linear-gradient(160deg,#0C1A2E 0%,#0A2A20 60%,#0E4A3A 100%);
+    padding: 14px 20px 60px;
+    position: relative; overflow: hidden;
+    border-radius: 0 0 36px 36px;
+  }
+  .hdr::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; border-radius:50%; background:rgba(245,158,11,0.07); }
+  .htop { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .logo-r { display:flex; align-items:center; gap:8px; }
+  .logo-i { width:32px; height:32px; background:var(--yellow); border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .logo-n { font-family:'Nunito',sans-serif; font-size:17px; font-weight:800; color:white; }
+  .logo-n span { color:var(--yellow); }
+  .hdr-r { display:flex; align-items:center; gap:8px; }
+  .bell { width:32px; height:32px; border-radius:var(--r-pill); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; position:relative; }
+  .bdot { position:absolute; top:5px; right:5px; width:6px; height:6px; background:var(--yellow); border-radius:50%; border:1.5px solid #0C1A2E; }
+  .ava { width:34px; height:34px; border-radius:var(--r-pill); background:linear-gradient(135deg,#F59E0B,#EA580C); display:flex; align-items:center; justify-content:center; font-family:'Nunito',sans-serif; font-weight:900; color:#0C1A2E; font-size:12px; border:2px solid rgba(245,158,11,0.6); }
+  .grt { font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:1px; }
+  .grtn { font-family:'Nunito',sans-serif; font-size:19px; font-weight:800; color:white; margin-bottom:9px; }
+  .strk { display:inline-flex; align-items:center; gap:5px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.25); border-radius:var(--r-pill); padding:3px 10px 3px 7px; margin-bottom:9px; }
+  .strk b { font-family:'Nunito',sans-serif; font-size:12px; font-weight:900; color:var(--yellow); }
+  .strk small { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.4); }
+  .lvlr { display:flex; align-items:center; gap:7px; margin-bottom:4px; }
+  .lvlb { background:var(--yellow); color:var(--navy); font-family:'Nunito',sans-serif; font-size:10px; font-weight:800; padding:2px 8px; border-radius:var(--r-pill); }
+  .rnkt { font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.4); font-style:italic; }
+  .xpr { display:flex; justify-content:space-between; font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.45); margin-bottom:5px; }
+  .xpr strong { color:rgba(255,255,255,0.75); }
+  .xpt { height:6px; background:rgba(255,255,255,0.1); border-radius:var(--r-pill); overflow:visible; position:relative; }
+  .xpf { height:100%; width:62%; background:linear-gradient(90deg,#B45309,#F59E0B,#FCD34D); border-radius:var(--r-pill); box-shadow:0 0 8px rgba(245,158,11,0.5); position:relative; }
+  .xpf::after { content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); width:11px; height:11px; background:#FCD34D; border-radius:50%; border:2px solid #0C1A2E; box-shadow:0 0 8px rgba(245,158,11,0.9); }
+
+  /* Stat cards */
+  .stats { display:flex; gap:8px; padding:0 16px; margin-top:-42px; position:relative; z-index:2; }
+  .sc { flex:1; background:rgba(255,255,255,0.12); backdrop-filter:blur(5px); border-top:1px solid rgba(255,255,255,0.8); border-left:1px solid rgba(255,255,255,0.6); border-right:1px solid rgba(255,255,255,0.2); border-bottom:1px solid rgba(255,255,255,0.2); border-radius:var(--r-lg); padding:10px 6px; text-align:center; }
+  .sn { font-family:'Nunito',sans-serif; font-size:20px; font-weight:900; }
+  .sn.t { color:var(--cyan); } .sn.y { color:var(--yellow); } .sn.g { color:var(--success); }
+  .sl { font-family:'Inter',sans-serif; font-size:9px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+
+  /* Section row */
+  .secr { display:flex; justify-content:space-between; align-items:center; padding:14px 16px 8px; }
+  .sect { font-family:'Nunito',sans-serif; font-size:15px; font-weight:900; color:rgba(255,255,255,0.95); }
+  .secl { font-family:'Nunito',sans-serif; font-size:11px; font-weight:800; color:#0C1A2E; background:var(--yellow); padding:3px 11px; border-radius:var(--r-pill); cursor:pointer; }
+
+  /* Project cards horizontal scroll */
+  .pscroll { display:flex; gap:12px; padding:0 16px 14px; overflow:hidden; }
+  .pc { flex-shrink:0; width:168px; border-radius:var(--r-xl); overflow:hidden; cursor:pointer; border-top:1px solid rgba(255,255,255,0.25); border-left:1px solid rgba(255,255,255,0.18); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+  .pi { width:100%; height:100px; display:flex; align-items:center; justify-content:center; font-size:32px; position:relative; }
+  .pi.tl { background:linear-gradient(135deg,#0C4A6E,#0E7490); }
+  .pi.am { background:linear-gradient(135deg,#78350F,#B45309); }
+  .pi.gn { background:linear-gradient(135deg,#052E16,#166534); }
+  .pi.cd { background:linear-gradient(135deg,#1e1b4b,#4338ca); }
+  .pi.bi { background:linear-gradient(135deg,#4a1942,#9d174d); }
+  .cbt { position:absolute; top:7px; left:7px; font-family:'Inter',sans-serif; font-size:8px; font-weight:700; color:rgba(255,255,255,0.9); background:rgba(0,0,0,0.35); backdrop-filter:blur(6px); padding:2px 6px; border-radius:var(--r-pill); text-transform:uppercase; letter-spacing:0.8px; }
+  .pb { background:rgba(12,26,46,0.85); padding:9px 11px 10px; }
+  .pn { font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; color:rgba(255,255,255,0.95); margin-bottom:5px; }
+  .pmeta { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+  .df { font-family:'Inter',sans-serif; font-size:8px; font-weight:700; padding:2px 6px; border-radius:var(--r-pill); }
+  .df.e { background:rgba(34,197,94,0.2); color:#86EFAC; border:1px solid rgba(34,197,94,0.3); }
+  .df.m { background:rgba(14,116,144,0.2); color:#67E8F9; border:1px solid rgba(14,116,144,0.3); }
+  .prg { display:flex; align-items:center; gap:5px; }
+  .prt { flex:1; height:3px; background:rgba(255,255,255,0.12); border-radius:var(--r-pill); }
+  .prf { height:100%; border-radius:var(--r-pill); }
+  .prf.tf { background:linear-gradient(90deg,#0E7490,#67E8F9); }
+  .prf.af { background:linear-gradient(90deg,#EA580C,#F59E0B); }
+  .prf.gf { background:linear-gradient(90deg,#166534,#22C55E); }
+  .pp { font-family:'Inter',sans-serif; font-size:9px; font-weight:700; color:rgba(255,255,255,0.5); }
+
+  /* Back header */
+  .bhdr { display:flex; align-items:center; gap:10px; padding:12px 18px 10px; }
+  .bbtn { width:34px; height:34px; border-radius:var(--r-pill); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:15px; cursor:pointer; flex-shrink:0; }
+  .btit { font-family:'Nunito',sans-serif; font-size:17px; font-weight:900; color:white; }
+
+  /* Search */
+  .srch { margin:0 16px 10px; position:relative; }
+  .si { width:100%; background:rgba(255,255,255,0.08); border-top:1px solid rgba(255,255,255,0.25); border-left:1px solid rgba(255,255,255,0.18); border-right:1px solid rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.06); border-radius:var(--r-pill); padding:10px 16px 10px 40px; font-family:'Inter',sans-serif; font-size:13px; color:rgba(255,255,255,0.9); outline:none; width:100%; }
+  .si::placeholder { color:rgba(255,255,255,0.3); }
+  .sic { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:13px; opacity:0.4; }
+
+  /* Filter chips */
+  .chips { display:flex; gap:7px; padding:0 16px 12px; overflow:hidden; }
+  .chip { flex-shrink:0; font-family:'Inter',sans-serif; font-size:11px; font-weight:600; padding:5px 12px; border-radius:var(--r-pill); cursor:pointer; border:1px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.55); background:rgba(255,255,255,0.06); }
+  .chip.on { background:rgba(14,116,144,0.25); color:var(--cyan); border-color:rgba(103,232,249,0.35); }
+
+  /* Project list card */
+  .plc { display:flex; gap:11px; padding:11px; margin:0 16px 10px; cursor:pointer; background:rgba(255,255,255,0.06); border-top:1px solid rgba(255,255,255,0.18); border-left:1px solid rgba(255,255,255,0.12); border-right:1px solid rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.04); border-radius:var(--r-lg); }
+  .plt { width:60px; height:60px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .pli { flex:1; }
+  .pln { font-family:'Nunito',sans-serif; font-size:13px; font-weight:800; color:white; margin-bottom:2px; }
+  .plm { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.45); margin-bottom:5px; }
+
+  /* Project detail hero */
+  .dh { width:100%; height:190px; display:flex; align-items:center; justify-content:center; font-size:56px; position:relative; }
+  .dh::after { content:''; position:absolute; inset:0; background:linear-gradient(to bottom,transparent 30%,rgba(12,26,46,0.95) 100%); }
+  .dhc { position:absolute; bottom:0; left:0; right:0; padding:14px 18px; z-index:1; }
+  .dcat { font-family:'Inter',sans-serif; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,0.5); margin-bottom:3px; }
+  .dtit { font-family:'Nunito',sans-serif; font-size:20px; font-weight:900; color:white; line-height:1.2; }
+
+  /* Steps */
+  .stps { padding:0 16px; }
+  .sti { display:flex; gap:11px; align-items:flex-start; padding:11px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .stn { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Nunito',sans-serif; font-size:11px; font-weight:900; flex-shrink:0; }
+  .stn.dn { background:rgba(34,197,94,0.2); color:var(--success); border:1px solid rgba(34,197,94,0.3); }
+  .stn.ac { background:rgba(14,116,144,0.25); color:var(--cyan); border:1px solid rgba(103,232,249,0.35); }
+  .stn.lk { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.3); border:1px solid rgba(255,255,255,0.1); }
+  .stt { flex:1; }
+  .stn2 { font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; color:rgba(255,255,255,0.9); margin-bottom:2px; }
+  .std { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.4); line-height:1.4; }
+
+  /* Glass card */
+  .gc { background:rgba(255,255,255,0.08); backdrop-filter:blur(5px); border-top:1px solid rgba(255,255,255,0.3); border-left:1px solid rgba(255,255,255,0.2); border-right:1px solid rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.06); border-radius:var(--r-lg); }
+
+  /* Level map */
+  .lm { display:flex; flex-direction:column; padding:8px 0; }
+  .ln { display:flex; align-items:center; gap:10px; padding:7px 0; position:relative; }
+  .ln::before { content:''; position:absolute; left:15px; top:0; bottom:0; width:2px; background:rgba(255,255,255,0.07); z-index:0; }
+  .ln:first-child::before { top:50%; }
+  .ln:last-child::before { bottom:50%; }
+  .lnc { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Nunito',sans-serif; font-size:11px; font-weight:900; flex-shrink:0; position:relative; z-index:1; }
+  .lnc.d { background:rgba(34,197,94,0.2); color:var(--success); border:2px solid rgba(34,197,94,0.4); }
+  .lnc.c { background:var(--yellow); color:var(--navy); border:2px solid rgba(245,158,11,0.6); box-shadow:0 0 10px rgba(245,158,11,0.4); }
+  .lnc.f { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.3); border:2px solid rgba(255,255,255,0.1); }
+  .lnl { font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.45); }
+  .lnl.c { color:rgba(255,255,255,0.9); font-weight:600; }
+
+  /* Badge grid */
+  .bgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:0 16px; }
+  .bi2 { background:rgba(255,255,255,0.06); border-radius:var(--r-lg); padding:10px 5px; text-align:center; cursor:pointer; border-top:1px solid rgba(255,255,255,0.2); }
+  .bi2.br { background:rgba(180,83,9,0.15); border-top-color:rgba(245,158,11,0.4); }
+  .bi2.sv { background:rgba(148,163,184,0.15); border-top-color:rgba(203,213,225,0.5); }
+  .bi2.gd { background:rgba(245,158,11,0.18); border-top-color:rgba(253,224,71,0.6); box-shadow:0 0 12px rgba(245,158,11,0.15); }
+  .bi2.lg { background:rgba(168,85,247,0.18); border-top-color:rgba(216,180,254,0.6); }
+  .bi2.lk { opacity:0.3; filter:grayscale(1); }
+  .btier { font-family:'Inter',sans-serif; font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
+  .bi2.br .btier { color:#F59E0B; } .bi2.sv .btier { color:#CBD5E1; }
+  .bi2.gd .btier { color:#FDE047; } .bi2.lg .btier { color:#D8B4FE; }
+  .bico { font-size:22px; display:block; margin-bottom:3px; }
+  .bnm { font-family:'Nunito',sans-serif; font-size:9px; font-weight:800; color:rgba(255,255,255,0.8); line-height:1.2; }
+
+  /* Cert */
+  .crd { margin:12px 16px; border-radius:var(--r-xl); background:linear-gradient(135deg,#0C1A2E 0%,#0A2A20 60%,#0E4A3A 100%); padding:18px; border-top:1px solid rgba(255,255,255,0.15); border-left:1px solid rgba(255,255,255,0.1); position:relative; overflow:hidden; cursor:pointer; }
+  .crd::before { content:''; position:absolute; top:-40px; right:-40px; width:140px; height:140px; border-radius:50%; background:rgba(245,158,11,0.1); }
+  .crh { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; position:relative; z-index:1; }
+  .cbr { display:flex; align-items:center; gap:5px; }
+  .cbn { font-family:'Nunito',sans-serif; font-size:13px; font-weight:900; color:white; }
+  .cbn span { color:var(--yellow); }
+  .ctag { font-family:'Inter',sans-serif; font-size:9px; font-weight:700; background:rgba(245,158,11,0.2); color:var(--yellow); padding:2px 8px; border-radius:var(--r-pill); border:1px solid rgba(245,158,11,0.3); }
+  .cttl { font-family:'Nunito',sans-serif; font-size:17px; font-weight:900; color:white; margin-bottom:3px; position:relative; z-index:1; }
+  .csub { font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:12px; position:relative; z-index:1; }
+  .cft { display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); position:relative; z-index:1; }
+  .cvl { font-family:'Inter',sans-serif; font-size:9px; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.8px; }
+  .cvc { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.6); font-weight:600; letter-spacing:1px; }
+
+  /* Leaderboard */
+  .lbt { display:flex; padding:0 16px 10px; }
+  .lbtb { flex:1; text-align:center; font-family:'Nunito',sans-serif; font-size:11px; font-weight:800; padding:7px; color:rgba(255,255,255,0.4); border-bottom:2px solid rgba(255,255,255,0.08); cursor:pointer; }
+  .lbtb.on { color:var(--cyan); border-bottom-color:var(--cyan); }
+  .lbr { display:flex; align-items:center; gap:10px; padding:9px 16px; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .lbr.you { background:rgba(14,116,144,0.12); border-radius:var(--r-md); }
+  .lbrk { width:22px; font-family:'Nunito',sans-serif; font-size:12px; font-weight:900; color:rgba(255,255,255,0.4); text-align:center; }
+  .lbrk.g { color:#FDE047; } .lbrk.s { color:#CBD5E1; } .lbrk.b { color:#F59E0B; }
+  .lba { width:32px; height:32px; border-radius:var(--r-pill); display:flex; align-items:center; justify-content:center; font-family:'Nunito',sans-serif; font-size:11px; font-weight:900; color:#0C1A2E; flex-shrink:0; }
+  .lbi { flex:1; }
+  .lbn { font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; color:rgba(255,255,255,0.9); }
+  .lbs { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.4); }
+  .lbx { font-family:'Nunito',sans-serif; font-size:12px; font-weight:900; color:var(--yellow); }
+
+  /* Profile */
+  .prfh { background:linear-gradient(160deg,#0C1A2E,#0A2A20); padding:22px 20px 28px; text-align:center; border-radius:0 0 36px 36px; }
+  .prfa { width:68px; height:68px; border-radius:var(--r-pill); background:linear-gradient(135deg,#F59E0B,#EA580C); display:flex; align-items:center; justify-content:center; font-family:'Nunito',sans-serif; font-size:22px; font-weight:900; color:#0C1A2E; margin:0 auto 10px; border:3px solid rgba(245,158,11,0.5); }
+  .prfn { font-family:'Nunito',sans-serif; font-size:18px; font-weight:900; color:white; margin-bottom:3px; }
+  .prfs { font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.4); }
+  .prfst { display:flex; justify-content:center; gap:22px; margin-top:14px; }
+  .prfst div { text-align:center; }
+  .prfst .v { font-family:'Nunito',sans-serif; font-size:18px; font-weight:900; }
+  .prfst .l { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.45); }
+  .slist { padding:0 16px; }
+  .si2 { display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; }
+  .sil { display:flex; align-items:center; gap:11px; }
+  .sii { width:32px; height:32px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .sil2 { font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; color:rgba(255,255,255,0.85); }
+  .sarr { color:rgba(255,255,255,0.25); font-size:14px; }
+
+  /* Step detail */
+  .sdh { background:linear-gradient(160deg,#0C1A2E,#0A2A20); padding:14px 18px 20px; border-radius:0 0 26px 26px; }
+  .spbar { display:flex; gap:3px; margin-bottom:9px; }
+  .spb { height:3px; flex:1; border-radius:999px; }
+  .spb.d { background:var(--success); } .spb.a { background:var(--cyan); box-shadow:0 0 5px rgba(103,232,249,0.5); } .spb.f { background:rgba(255,255,255,0.12); }
+  .sbdg { display:inline-flex; align-items:center; background:rgba(14,116,144,0.2); border:1px solid rgba(103,232,249,0.3); border-radius:var(--r-pill); padding:3px 10px; margin-bottom:7px; font-family:'Inter',sans-serif; font-size:10px; font-weight:600; color:var(--cyan); }
+  .sdtit { font-family:'Nunito',sans-serif; font-size:18px; font-weight:900; color:white; }
+  .sins { font-family:'Inter',sans-serif; font-size:12px; color:rgba(255,255,255,0.65); line-height:1.6; padding:12px 18px; }
+  .mats { padding:0 18px 12px; }
+  .mat { display:flex; align-items:center; gap:9px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .mck { width:16px; height:16px; border-radius:4px; border:1.5px solid rgba(103,232,249,0.4); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--cyan); flex-shrink:0; }
+  .mnm { font-family:'Inter',sans-serif; font-size:12px; color:rgba(255,255,255,0.7); }
+  .phu { margin:0 18px 14px; background:rgba(255,255,255,0.05); border:2px dashed rgba(255,255,255,0.15); border-radius:var(--r-xl); padding:20px; text-align:center; cursor:pointer; }
+  .phu span { font-size:26px; display:block; margin-bottom:6px; }
+  .phu p { font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.4); }
+
+  /* AI chat */
+  .actb { display:flex; align-items:center; gap:9px; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08); background:rgba(12,26,46,0.5); flex-shrink:0; }
+  .acav { width:30px; height:30px; background:linear-gradient(135deg,#0E7490,#0C4A6E); border-radius:var(--r-pill); display:flex; align-items:center; justify-content:center; font-size:14px; border:1px solid rgba(103,232,249,0.3); flex-shrink:0; }
+  .acn { font-family:'Nunito',sans-serif; font-size:12px; font-weight:900; color:rgba(255,255,255,0.9); }
+  .acst { font-family:'Inter',sans-serif; font-size:10px; color:var(--cyan); display:flex; align-items:center; gap:3px; }
+  .acd { width:5px; height:5px; border-radius:50%; background:var(--success); }
+  .acctx { padding:6px 14px 8px; }
+  .acchip { display:inline-flex; align-items:center; gap:5px; background:rgba(14,116,144,0.12); border:1px solid rgba(103,232,249,0.2); border-radius:var(--r-pill); padding:3px 10px; font-family:'Inter',sans-serif; font-size:10px; color:rgba(103,232,249,0.8); }
+  .acmsg { display:flex; flex-direction:column; gap:9px; padding:8px 14px; }
+  .bbl { max-width:85%; padding:9px 12px; font-family:'Inter',sans-serif; font-size:12px; line-height:1.5; border-radius:var(--r-lg); }
+  .bbl.u { align-self:flex-end; background:#0C1A2E; color:rgba(255,255,255,0.9); border-bottom-right-radius:4px; border-top:1px solid rgba(255,255,255,0.1); }
+  .bbl.a { align-self:flex-start; background:rgba(255,255,255,0.1); backdrop-filter:blur(5px); color:rgba(255,255,255,0.88); border-top:1px solid rgba(255,255,255,0.28); border-left:1px solid rgba(255,255,255,0.18); border-right:1px solid rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.06); border-bottom-left-radius:4px; }
+  .bbl.a strong { color:var(--cyan); font-weight:600; }
+  .bsnd { font-family:'Inter',sans-serif; font-size:9px; font-weight:600; color:rgba(255,255,255,0.3); margin-bottom:2px; letter-spacing:0.5px; }
+  .bsnd.ai { color:rgba(103,232,249,0.6); }
+  .acinp { display:flex; align-items:center; gap:8px; padding:9px 13px; border-top:1px solid rgba(255,255,255,0.08); background:rgba(12,26,46,0.95); position:absolute; bottom:0; left:0; right:0; }
+  .acf { flex:1; background:rgba(255,255,255,0.08); border-top:1px solid rgba(255,255,255,0.18); border-left:1px solid rgba(255,255,255,0.12); border-right:1px solid rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.04); border-radius:var(--r-pill); padding:7px 13px; font-family:'Inter',sans-serif; font-size:12px; color:rgba(255,255,255,0.5); }
+  .acs { width:30px; height:30px; background:var(--teal); border-radius:var(--r-pill); display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; flex-shrink:0; }
+
+  /* XP celebration overlay */
+  .xpov { position:absolute; inset:0; background:rgba(6,14,12,0.9); backdrop-filter:blur(8px); z-index:50; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; border-radius:36px; }
+  .xpov.show { display:flex; }
+
+  /* Notifications */
+  .ndg { padding:4px 16px 7px; font-family:'Inter',sans-serif; font-size:10px; font-weight:600; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:1px; }
+  .nrow { display:flex; align-items:flex-start; gap:11px; padding:11px 16px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; }
+  .nico { width:36px; height:36px; border-radius:var(--r-pill); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .ntit { font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; color:rgba(255,255,255,0.9); margin-bottom:2px; }
+  .nsub { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.45); }
+  .ntime { font-family:'Inter',sans-serif; font-size:9px; color:rgba(255,255,255,0.25); margin-top:2px; }
+  .ndot { width:7px; height:7px; border-radius:50%; background:var(--yellow); flex-shrink:0; margin-top:4px; box-shadow:0 0 5px rgba(245,158,11,0.6); }
+
+  /* Annotations */
+  .annotations { margin-top:16px; display:flex; flex-direction:column; gap:7px; max-width:375px; }
+  .ann { display:flex; gap:8px; align-items:flex-start; }
+  .an { width:18px; height:18px; border-radius:50%; background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.4); display:flex; align-items:center; justify-content:center; font-family:'Nunito',sans-serif; font-size:9px; font-weight:900; color:var(--yellow); flex-shrink:0; margin-top:1px; }
+  .at { font-family:'Inter',sans-serif; font-size:10px; color:rgba(255,255,255,0.45); line-height:1.5; }
+  .at strong { color:rgba(255,255,255,0.72); font-weight:600; }
+
+  /* Buttons */
+  .btn-t { width:100%; background:var(--teal); color:white; font-family:'Nunito',sans-serif; font-size:14px; font-weight:800; padding:13px; border:none; border-radius:var(--r-md); cursor:pointer; box-shadow:0 4px 14px rgba(14,116,144,0.5); }
+  .btn-g { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8); font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; padding:11px 20px; border:1px solid rgba(255,255,255,0.2); border-radius:var(--r-md); cursor:pointer; }
+  .btn-ai { background:rgba(103,232,249,0.12); border:1px solid rgba(103,232,249,0.3); color:var(--cyan); font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; padding:7px 13px; border-radius:var(--r-pill); cursor:pointer; }
+  .screen#s-aichat.active { display:block; }
+</style>
+</head>
+<body>
+
+<div class="page-title">S-MIB Wireframes — Learner Screens</div>
+<div class="page-sub">Screens 07–18 · Group 2 of 3 · All screens in one phone frame</div>
+
+<div class="screens-row">
+<div class="phone-wrap">
+  <div class="screen-num">Screens 07–18 / 29</div>
+  <div class="screen-label">Learner Flow</div>
+  <div class="interact-hint">👆 Use nav bar, back buttons, and tappable cards</div>
+
+  <div class="phone" id="ph">
+
+    <!-- ═══ S03: HOME ═══ -->
+    <div class="screen active" id="s-home" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="hdr">
+        <div class="htop">
+          <div class="logo-r"><div class="logo-i">🦅</div><div class="logo-n">S-<span>MIB</span></div></div>
+          <div class="hdr-r">
+            <div class="bell" onclick="go('s-notif')">🔔<div class="bdot"></div></div>
+            <div class="ava">FZ</div>
+          </div>
+        </div>
+        <div class="grt">Good morning,</div>
+        <div class="grtn">Fazrin 👋</div>
+        <div class="strk">🔥 <b>12</b> <small>day streak · Best: 21</small></div>
+        <div class="lvlr"><span class="lvlb">LEVEL 4</span><span class="rnkt">Maker Apprentice</span></div>
+        <div class="xpr"><span><strong>620</strong> / 1000 XP</span><span style="color:rgba(245,158,11,0.7);">380 XP to Level 5</span></div>
+        <div class="xpt"><div class="xpf"></div></div>
+      </div>
+      <div class="stats">
+        <div class="sc"><div class="sn t">3</div><div class="sl">Active</div></div>
+        <div class="sc"><div class="sn y">7</div><div class="sl">Done</div></div>
+        <div class="sc"><div class="sn g">12</div><div class="sl">Badges</div></div>
+      </div>
+      <div style="height:14px;"></div>
+      <div class="secr"><span class="sect">My Projects 🛠️</span><span class="secl" onclick="go('s-list')">See All →</span></div>
+      <div class="pscroll">
+        <div class="pc" onclick="go('s-detail')"><div class="pi tl"><span class="cbt">Electronics</span>⚡</div><div class="pb"><div class="pn">Solar Phone Charger</div><div class="pmeta"><span class="df e">Easy</span></div><div class="prg"><div class="prt"><div class="prf tf" style="width:45%"></div></div><span class="pp">45%</span></div></div></div>
+        <div class="pc" onclick="go('s-detail')"><div class="pi am"><span class="cbt">Agriculture</span>🌱</div><div class="pb"><div class="pn">Smart Water Sensor</div><div class="pmeta"><span class="df m">Medium</span></div><div class="prg"><div class="prt"><div class="prf af" style="width:80%"></div></div><span class="pp">80%</span></div></div></div>
+        <div class="pc" onclick="go('s-detail')"><div class="pi gn"><span class="cbt">Renewable</span>♻️</div><div class="pb"><div class="pn">Wind Turbine</div><div class="pmeta"><span class="df e">Easy</span></div><div class="prg"><div class="prt"><div class="prf gf" style="width:15%"></div></div><span class="pp">15%</span></div></div></div>
+      </div>
+      <div class="secr"><span class="sect">Explore New 🔭</span><span class="secl" onclick="go('s-explore')">Browse →</span></div>
+      <div class="pscroll">
+        <div class="pc" onclick="go('s-detail')"><div class="pi cd"><span class="cbt">Coding</span>💻</div><div class="pb"><div class="pn">LED Traffic Light</div><div class="pmeta"><span class="df e">Easy</span></div><div class="prg"><div class="prt"><div class="prf tf" style="width:0%"></div></div><span class="pp">New</span></div></div></div>
+        <div class="pc" onclick="go('s-detail')"><div class="pi bi"><span class="cbt">Biology</span>🔬</div><div class="pb"><div class="pn">Soil pH Tester</div><div class="pmeta"><span class="df m">Medium</span></div><div class="prg"><div class="prt"><div class="prf tf" style="width:0%"></div></div><span class="pp">New</span></div></div></div>
+      </div>
+      <div class="bnav">
+        <div class="nb on"><span class="ni">🏠</span>Home</div>
+        <div class="nb" onclick="go('s-explore')"><span class="ni">🔍</span>Explore</div>
+        <div class="nb" onclick="go('s-progress')"><span class="ni">📊</span>Progress</div>
+        <div class="nb" onclick="go('s-profile')"><span class="ni">👤</span>Profile</div>
+      </div>
+    </div>
+
+    <!-- ═══ S04: PROJECT LIST ═══ -->
+    <div class="screen" id="s-list" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="bhdr"><div class="bbtn" onclick="back()">←</div><span class="btit">All Projects</span></div>
+      <div class="srch"><span class="sic">🔍</span><input class="si" placeholder="Search projects..." readonly /></div>
+      <div class="chips"><div class="chip on">All</div><div class="chip">Electronics</div><div class="chip">Agriculture</div><div class="chip">Renewable</div><div class="chip">Coding</div></div>
+      <div style="padding:4px 16px 8px;font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,0.35);">4 projects found</div>
+      <div class="plc" onclick="go('s-detail')"><div class="plt tl">⚡</div><div class="pli"><div class="pln">Solar Phone Charger</div><div class="plm">Electronics · Easy · 6 steps</div><div class="prg"><div class="prt"><div class="prf tf" style="width:45%"></div></div><span class="pp">45%</span></div></div></div>
+      <div class="plc" onclick="go('s-detail')"><div class="plt am">🌱</div><div class="pli"><div class="pln">Smart Water Sensor</div><div class="plm">Agriculture · Medium · 8 steps</div><div class="prg"><div class="prt"><div class="prf af" style="width:80%"></div></div><span class="pp">80%</span></div></div></div>
+      <div class="plc" onclick="go('s-detail')"><div class="plt gn">♻️</div><div class="pli"><div class="pln">Recycled Wind Turbine</div><div class="plm">Renewable · Easy · 5 steps</div><div class="prg"><div class="prt"><div class="prf gf" style="width:15%"></div></div><span class="pp">15%</span></div></div></div>
+      <div class="plc" onclick="go('s-detail')"><div class="plt cd">💻</div><div class="pli"><div class="pln">LED Traffic Light</div><div class="plm">Coding · Easy · 4 steps</div><div class="prg"><div class="prt"><div class="prf tf" style="width:0%"></div></div><span class="pp">New</span></div></div></div>
+      <div class="bnav">
+        <div class="nb" onclick="go('s-home')"><span class="ni">🏠</span>Home</div>
+        <div class="nb on"><span class="ni">🔍</span>Explore</div>
+        <div class="nb" onclick="go('s-progress')"><span class="ni">📊</span>Progress</div>
+        <div class="nb" onclick="go('s-profile')"><span class="ni">👤</span>Profile</div>
+      </div>
+    </div>
+
+    <!-- ═══ S05: PROJECT DETAIL ═══ -->
+    <div class="screen" id="s-detail" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="dh tl">⚡<div class="dhc"><div class="dcat">Electronics · Easy · 6 Steps</div><div class="dtit">Solar Phone Charger</div></div></div>
+      <div style="padding:10px 16px 8px;display:flex;justify-content:space-between;align-items:center;">
+        <div class="bbtn" onclick="back()" style="width:auto;padding:7px 13px;border-radius:var(--r-pill);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);">← Back</div>
+        <button class="btn-ai" onclick="go('s-aichat')">🤖 AI Help</button>
+      </div>
+      <!-- Creator credit + rating -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px 8px;">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#0E7490,#0C4A6E);display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:9px;font-weight:900;color:white;">AK</div>
+          <span style="font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,0.5);">by <span style="color:rgba(103,232,249,0.8);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px;">Ahmad Khalil</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;color:var(--yellow);">4.9★</span>
+          <span style="font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,0.35);">(142 ratings)</span>
+        </div>
+      </div>
+      <div class="prg" style="padding:0 16px 10px;gap:8px;"><div class="prt" style="height:5px;"><div class="prf tf" style="width:45%"></div></div><span class="pp" style="font-size:11px;">3 / 6 steps done</span></div>
+      <div class="stps">
+        <div class="sti"><div class="stn dn">✓</div><div class="stt"><div class="stn2">Gather materials</div><div class="std">Collect all required components</div></div></div>
+        <div class="sti"><div class="stn dn">✓</div><div class="stt"><div class="stn2">Build the circuit</div><div class="std">Connect solar panel to breadboard</div></div></div>
+        <div class="sti"><div class="stn dn">✓</div><div class="stt"><div class="stn2">Add USB output</div><div class="std">Wire the USB charging port</div></div></div>
+        <div class="sti" style="cursor:pointer;" onclick="go('s-step')"><div class="stn ac">4</div><div class="stt"><div class="stn2">Test output voltage</div><div class="std" style="color:var(--cyan);">Tap to start this step →</div></div></div>
+        <div class="sti"><div class="stn lk">5</div><div class="stt"><div class="stn2">Add safety casing</div><div class="std">Protect the circuit</div></div></div>
+        <div class="sti"><div class="stn lk">6</div><div class="stt"><div class="stn2">Take proof photo</div><div class="std">Upload your completed build</div></div></div>
+      </div>
+      <div style="padding:12px 16px 6px;display:flex;gap:8px;">
+        <button class="btn-t" onclick="go('s-step')" style="flex:1;">▶ Continue Step 4</button>
+        <button class="btn-ai" onclick="go('s-aichat')">🤖</button>
+      </div>
+      <div style="margin:0 16px 12px;background:rgba(14,116,144,0.08);border:1px dashed rgba(103,232,249,0.2);border-radius:var(--r-md);padding:9px 12px;">
+        <span style="font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,0.4);">📌 Unstarted projects (0%) show <span style="color:rgba(103,232,249,0.7);font-weight:600;">Enrol → Start Project</span> instead of Continue</span>
+      </div>
+    </div>
+
+    <!-- ═══ S06: STEP DETAIL ═══ -->
+    <div class="screen" id="s-step" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="sdh">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div class="bbtn" onclick="back()">←</div>
+          <button class="btn-ai" onclick="go('s-aichat')">🤖 Ask AI</button>
+        </div>
+        <div class="spbar"><div class="spb d"></div><div class="spb d"></div><div class="spb d"></div><div class="spb a"></div><div class="spb f"></div><div class="spb f"></div></div>
+        <div class="sbdg">Step 4 of 6 · Solar Phone Charger</div>
+        <div class="sdtit">Test the output voltage</div>
+      </div>
+      <div class="sins">Use a multimeter to measure the voltage at the USB output pins. You should see between 4.8V and 5.2V in direct sunlight.</div>
+      <!-- Hint tip -->
+      <div style="margin:0 18px 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r-md);padding:9px 12px;display:flex;gap:8px;align-items:flex-start;">
+        <span style="font-size:14px;flex-shrink:0;">💡</span>
+        <span style="font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,0.6);line-height:1.5;"><strong style="color:rgba(245,158,11,0.9);">Tip:</strong> No sunlight? Use a lamp held 10cm above the panel. Readings below 4V mean a wiring issue.</span>
+      </div>
+      <div class="secr" style="padding-top:4px;"><span class="sect" style="font-size:13px;">Materials needed</span></div>
+      <div class="mats">
+        <div class="mat"><div class="mck">✓</div><span class="mnm">Multimeter</span></div>
+        <div class="mat"><div class="mck">✓</div><span class="mnm">Completed circuit from Step 3</span></div>
+        <div class="mat"><div class="mck" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.3);"></div><span class="mnm">Direct sunlight or lamp</span></div>
+      </div>
+      <div class="phu"><span>📸</span><p>Tap to take a proof photo of your reading</p></div>
+      <div style="padding:0 16px;">
+        <button class="btn-t" onclick="showXP()">✓ Mark Step Done</button>
+      </div>
+      <!-- XP Celebration overlay — inside this screen -->
+      <div class="xpov" id="xpov">
+        <div style="font-size:52px;margin-bottom:14px;">🎉</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:white;margin-bottom:5px;">Step 4 Complete!</div>
+        <div style="font-family:'Inter',sans-serif;font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:18px;">Well done, Fazrin</div>
+        <div style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);border-radius:var(--r-pill);padding:10px 24px;margin-bottom:22px;">
+          <span style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:var(--yellow);">+50 XP</span>
+        </div>
+        <button class="btn-t" onclick="finishStep()">Back to Project</button>
+      </div>
+    </div>
+
+    <!-- ═══ S07: PROGRESS ═══ -->
+    <div class="screen" id="s-progress" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="hdr" style="padding-bottom:22px;">
+        <div class="htop"><div class="logo-r"><div class="logo-i">📊</div><div class="logo-n">My <span>Progress</span></div></div><div class="ava">FZ</div></div>
+        <div class="lvlr"><span class="lvlb">LEVEL 4</span><span class="rnkt">Maker Apprentice</span></div>
+        <div class="xpr"><span><strong>620</strong> / 1000 XP</span><span style="color:rgba(245,158,11,0.7);">380 XP to Level 5</span></div>
+        <div class="xpt"><div class="xpf"></div></div>
+      </div>
+      <div style="padding:14px 16px 0;">
+        <div class="gc" style="padding:14px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:rgba(255,255,255,0.9);">Level Journey</div>
+          <div style="display:flex;align-items:center;gap:5px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r-pill);padding:2px 9px;">
+            <span style="font-size:12px;">🔥</span>
+            <span style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;color:var(--yellow);">12 day streak</span>
+          </div>
+        </div>
+          <div class="lm">
+            <div class="ln"><div class="lnc d">✓</div><span class="lnl">Level 1 — Curious Maker</span></div>
+            <div class="ln"><div class="lnc d">✓</div><span class="lnl">Level 2 — Junior Builder</span></div>
+            <div class="ln"><div class="lnc d">✓</div><span class="lnl">Level 3 — STEM Explorer</span></div>
+            <div class="ln"><div class="lnc c">4</div><span class="lnl c">Level 4 — Maker Apprentice ← You</span></div>
+            <div class="ln"><div class="lnc f">5</div><span class="lnl">Level 5 — Project Maker</span></div>
+            <div class="ln"><div class="lnc f">…</div><span class="lnl">Level 10 — Sarawak Maker</span></div>
+          </div>
+        </div>
+        <div class="gc" style="padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:rgba(255,255,255,0.9);">Completed Projects</span>
+            <span class="secl" onclick="go('s-list')" style="font-size:10px;">See All →</span>
+          </div>
+          <div class="plc" style="margin:0 0 8px;background:rgba(255,255,255,0.04);"><div class="plt tl">⚡</div><div class="pli"><div class="pln">Mini Fan Circuit</div><div class="plm">Electronics · Completed April 2026</div><div style="font-family:'Inter',sans-serif;font-size:10px;color:var(--yellow);">+200 XP earned</div></div></div>
+          <div style="text-align:center;padding:6px 0 2px;font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,0.3);">+5 more completed projects</div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="nb" onclick="go('s-home')"><span class="ni">🏠</span>Home</div>
+        <div class="nb" onclick="go('s-explore')"><span class="ni">🔍</span>Explore</div>
+        <div class="nb on"><span class="ni">📊</span>Progress</div>
+        <div class="nb" onclick="go('s-profile')"><span class="ni">👤</span>Profile</div>
+      </div>
+    </div>
+
+    <!-- ═══ S08: ACHIEVEMENTS ═══ -->
+    <div class="screen" id="s-achieve" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="bhdr"><div class="bbtn" onclick="back()">←</div><span class="btit">Achievements 🏆</span></div>
+      <div class="secr" style="padding-top:4px;"><span class="sect" style="font-size:13px;">Badges</span></div>
+      <div class="bgrid">
+        <div class="bi2 br"><div class="btier">Bronze</div><span class="bico">⚡</span><div class="bnm">First Build</div></div>
+        <div class="bi2 br"><div class="btier">Bronze</div><span class="bico">🔥</span><div class="bnm">7 Day Streak</div></div>
+        <div class="bi2 sv"><div class="btier">Silver</div><span class="bico">🌿</span><div class="bnm">5 Projects</div></div>
+        <div class="bi2 sv"><div class="btier">Silver</div><span class="bico">🔬</span><div class="bnm">STEM Explorer</div></div>
+        <div class="bi2 gd"><div class="btier">Gold</div><span class="bico">🌟</span><div class="bnm">Top Maker</div></div>
+        <div class="bi2 lg lk"><div class="btier">Legend</div><span class="bico">🏆</span><div class="bnm">TVET Ready</div></div>
+        <div class="bi2 br lk"><div class="btier">Bronze</div><span class="bico">📸</span><div class="bnm">Proof Photo</div></div>
+        <div class="bi2 lg lk"><div class="btier">Legend</div><span class="bico">🎓</span><div class="bnm">Mastery</div></div>
+      </div>
+      <div class="secr"><span class="sect" style="font-size:13px;">Certificates</span></div>
+      <div class="crd" onclick="go('s-cert')">
+        <div class="crh"><div class="cbr"><span style="font-size:16px;">🦅</span><span class="cbn">S-<span>MIB</span></span></div><span class="ctag">Project Completion</span></div>
+        <div class="cttl">Solar Phone Charger</div>
+        <div class="csub">Fazrin Ezan Darwish · April 2026</div>
+        <div class="cft"><div><div class="cvl">Verification ID</div><div class="cvc">SMIB-2026-A4F2-9C1E</div></div><span style="font-size:13px;opacity:0.5;cursor:pointer;">📋</span></div>
+      </div>
+      <div class="bnav">
+        <div class="nb" onclick="go('s-home')"><span class="ni">🏠</span>Home</div>
+        <div class="nb" onclick="go('s-explore')"><span class="ni">🔍</span>Explore</div>
+        <div class="nb" onclick="go('s-progress')"><span class="ni">📊</span>Progress</div>
+        <div class="nb on"><span class="ni">👤</span>Profile</div>
+      </div>
+    </div>
+
+    <!-- ═══ S09: CERTIFICATE ═══ -->
+    <div class="screen" id="s-cert" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="bhdr"><div class="bbtn" onclick="back()">←</div><span class="btit">Certificate</span></div>
+      <div class="crd" style="margin:8px 16px;cursor:default;">
+        <div class="crh"><div class="cbr"><span style="font-size:18px;">🦅</span><span class="cbn" style="font-size:15px;">S-<span>MIB</span></span></div><span class="ctag">Project Completion</span></div>
+        <div style="font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;position:relative;z-index:1;">Awarded for completing</div>
+        <div class="cttl" style="font-size:19px;">Solar Phone Charger</div>
+        <div class="csub">Fazrin Ezan Darwish · April 2026</div>
+        <div class="cft"><div><div class="cvl">Verification ID</div><div class="cvc">SMIB-2026-A4F2-9C1E</div></div><span style="font-size:14px;opacity:0.5;cursor:pointer;">📋</span></div>
+      </div>
+      <div style="padding:12px 16px;display:flex;gap:10px;">
+        <button class="btn-t" style="flex:1;">📤 Share</button>
+        <button class="btn-g">🔍 Verify</button>
+      </div>
+      <div style="padding:0 16px 4px;font-family:'Inter',sans-serif;font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;">Category Mastery Variant</div>
+      <div class="crd" style="margin:0 16px 12px;cursor:default;">
+        <div class="crh"><div class="cbr"><span style="font-size:18px;">🦅</span><span class="cbn" style="font-size:15px;">S-<span>MIB</span></span></div><span class="ctag" style="background:rgba(14,116,144,0.2);color:var(--cyan);border-color:rgba(103,232,249,0.3);">Category Mastery</span></div>
+        <div style="font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;position:relative;z-index:1;">Awarded for mastering</div>
+        <div class="cttl" style="font-size:19px;">Electronics</div>
+        <div class="csub">Fazrin Ezan Darwish · April 2026</div>
+        <div class="cft"><div><div class="cvl">Verification ID</div><div class="cvc">SMIB-2026-B7E1-3F9A</div></div><span style="font-size:14px;opacity:0.5;cursor:pointer;">📋</span></div>
+      </div>
+    </div>
+
+    <!-- ═══ S10: AI HELP ═══ -->
+    <div class="screen" id="s-aichat" style="background:linear-gradient(160deg,#0E2A3E 0%,#0E3D2E 50%,#0D4A3A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+
+      <!-- Top bar -->
+      <div style="display:flex;align-items:center;gap:0;padding:8px 14px 8px 10px;border-bottom:1px solid rgba(255,255,255,0.12);background:rgba(14,40,56,0.5);">
+        <div class="bbtn" onclick="back()" style="margin-right:8px;border-color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.1);">←</div>
+        <div class="acav">🦅</div>
+        <div style="flex:1;padding-left:10px;">
+          <div class="acn">S-MIB AI Helper</div>
+          <div class="acst"><span class="acd"></span>Ready to help</div>
+        </div>
+        <div style="font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);">Solar Phone Charger</div>
+      </div>
+
+      <!-- Context chip -->
+      <div style="padding:8px 14px 4px;">
+        <div class="acchip">📌 Step 4 — Test output voltage</div>
+      </div>
+
+      <!-- Messages -->
+      <div style="padding:8px 14px 70px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <div class="bsnd" style="text-align:right;">You</div>
+          <div class="bbl u">My LED is not lighting up on step 4. What should I check?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
+          <div class="bsnd ai">S-MIB AI</div>
+          <div class="bbl a"><strong>Check these first:</strong><br>1. LED legs — longer leg to positive (+).<br>2. Wires fully in breadboard holes.<br>3. Try a different LED.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <div class="bsnd" style="text-align:right;">You</div>
+          <div class="bbl u">I tried a new LED and it still doesn't work.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
+          <div class="bsnd ai">S-MIB AI</div>
+          <div class="bbl a">Check your <strong>power source</strong> next — battery charged and +/− wires not swapped.</div>
+        </div>
+      </div>
+
+      <!-- Input bar pinned to bottom -->
+      <div class="acinp">
+        <div class="acf">Ask anything about your project...</div>
+        <div class="acs">↑</div>
+      </div>
+    </div>
+
+    <!-- ═══ S11: LEADERBOARD ═══ -->
+    <div class="screen" id="s-lb" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="bhdr"><div class="bbtn" onclick="back()">←</div><span class="btit">Leaderboard 🏆</span></div>
+      <div class="lbt"><div class="lbtb on">My School</div><div class="lbtb">Sarawak</div><div class="lbtb">Global</div></div>
+      <div class="lbr you"><div class="lbrk g">1</div><div class="lba" style="background:linear-gradient(135deg,#F59E0B,#EA580C);">FZ</div><div class="lbi"><div class="lbn">Fazrin Ezan</div><div class="lbs">SMK Bandar Kuching · You</div></div><div class="lbx">3,620 XP</div></div>
+      <div class="lbr"><div class="lbrk s">2</div><div class="lba" style="background:linear-gradient(135deg,#0E7490,#0C4A6E);">AM</div><div class="lbi"><div class="lbn">Ahmad Musa</div><div class="lbs">SMK Bandar Kuching</div></div><div class="lbx">3,210 XP</div></div>
+      <div class="lbr"><div class="lbrk b">3</div><div class="lba" style="background:linear-gradient(135deg,#166534,#064E3B);">NR</div><div class="lbi"><div class="lbn">Nurul Rina</div><div class="lbs">SMK Bandar Kuching</div></div><div class="lbx">2,980 XP</div></div>
+      <div class="lbr"><div class="lbrk">4</div><div class="lba" style="background:linear-gradient(135deg,#4338ca,#1e1b4b);">HB</div><div class="lbi"><div class="lbn">Haziq Bakri</div><div class="lbs">SMK Bandar Kuching</div></div><div class="lbx">2,750 XP</div></div>
+      <div class="lbr"><div class="lbrk">5</div><div class="lba" style="background:linear-gradient(135deg,#9d174d,#4a1942);">SW</div><div class="lbi"><div class="lbn">Siti Wana</div><div class="lbs">SMK Bandar Kuching</div></div><div class="lbx">2,640 XP</div></div>
+      <div class="bnav">
+        <div class="nb" onclick="go('s-home')"><span class="ni">🏠</span>Home</div>
+        <div class="nb" onclick="go('s-explore')"><span class="ni">🔍</span>Explore</div>
+        <div class="nb" onclick="go('s-progress')"><span class="ni">📊</span>Progress</div>
+        <div class="nb on"><span class="ni">👤</span>Profile</div>
+      </div>
+    </div>
+
+    <!-- ═══ S12: PROFILE ═══ -->
+    <div class="screen" id="s-profile" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="prfh">
+        <div class="prfa">FZ</div>
+        <div class="prfn">Fazrin Ezan Darwish</div>
+        <div class="prfs">Learner · SMK Bandar Kuching · Level 4</div>
+      <div style="font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;">Member since February 2025</div>
+        <div class="prfst">
+          <div><div class="v" style="color:var(--cyan);">7</div><div class="l">Projects</div></div>
+          <div><div class="v" style="color:var(--yellow);">12</div><div class="l">Badges</div></div>
+          <div><div class="v" style="color:var(--success);">3</div><div class="l">Certs</div></div>
+        </div>
+      </div>
+      <div style="height:10px;"></div>
+      <div class="slist">
+        <div class="si2" onclick="go('s-achieve')"><div class="sil"><div class="sii" style="background:rgba(245,158,11,0.15);">🏆</div><span class="sil2">Achievements</span></div><span class="sarr">›</span></div>
+        <div class="si2" onclick="go('s-lb')"><div class="sil"><div class="sii" style="background:rgba(14,116,144,0.15);">📊</div><span class="sil2">Leaderboard</span></div><span class="sarr">›</span></div>
+        <div class="si2"><div class="sil"><div class="sii" style="background:rgba(103,232,249,0.1);">🔔</div><span class="sil2">Notifications</span></div><span class="sarr">›</span></div>
+        <div class="si2"><div class="sil"><div class="sii" style="background:rgba(255,255,255,0.06);">🌐</div><span class="sil2">Language</span></div><span class="sarr">›</span></div>
+        <div class="si2"><div class="sil"><div class="sii" style="background:rgba(255,255,255,0.06);">🔒</div><span class="sil2">Privacy & Security</span></div><span class="sarr">›</span></div>
+        <div class="si2"><div class="sil"><div class="sii" style="background:rgba(239,68,68,0.12);">🚪</div><span class="sil2" style="color:#FCA5A5;">Sign Out</span></div><span class="sarr" style="color:#FCA5A5;">›</span></div>
+      </div>
+      <div class="bnav">
+        <div class="nb" onclick="go('s-home')"><span class="ni">🏠</span>Home</div>
+        <div class="nb" onclick="go('s-explore')"><span class="ni">🔍</span>Explore</div>
+        <div class="nb" onclick="go('s-progress')"><span class="ni">📊</span>Progress</div>
+        <div class="nb on"><span class="ni">👤</span>Profile</div>
+      </div>
+    </div>
+
+    <!-- ═══ S13: NOTIFICATIONS ═══ -->
+    <div class="screen" id="s-notif" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="bhdr"><div class="bbtn" onclick="back()">←</div><span class="btit">Notifications 🔔</span></div>
+      <div class="ndg">Today</div>
+      <div class="nrow"><div class="nico" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);">⚡</div><div style="flex:1;"><div class="ntit">Step completed! +50 XP</div><div class="nsub">You finished Step 3 of Solar Phone Charger</div><div class="ntime">2 hours ago</div></div><div class="ndot"></div></div>
+      <div class="nrow"><div class="nico" style="background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);">🏆</div><div style="flex:1;"><div class="ntit">New badge unlocked!</div><div class="nsub">You earned the <span style="color:#D8B4FE;font-weight:600;">Top Maker</span> badge</div><div class="ntime">5 hours ago</div></div><div class="ndot"></div></div>
+      <div class="ndg">Yesterday</div>
+      <div class="nrow" style="opacity:0.7;"><div class="nico" style="background:rgba(14,116,144,0.15);border:1px solid rgba(14,116,144,0.3);">📊</div><div style="flex:1;"><div class="ntit">Leaderboard update</div><div class="nsub">You moved up to <span style="color:var(--cyan);font-weight:600;">#1</span> in your school</div><div class="ntime">Yesterday</div></div></div>
+      <div class="nrow" style="opacity:0.7;"><div class="nico" style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);">🔥</div><div style="flex:1;"><div class="ntit">Streak reminder</div><div class="nsub">Keep your 12-day streak alive — do a step today!</div><div class="ntime">Yesterday</div></div></div>
+    </div>
+
+    <!-- ═══ EXPLORE ═══ -->
+    <div class="screen" id="s-explore" style="background:linear-gradient(135deg,#064E3B 0%,#0E7490 30%,#0C4A6E 55%,#78350F 80%,#1A3A1A 100%);">
+      <div class="sbar"><span>9:41</span><span>●●● 5G 🔋</span></div>
+      <div class="bhdr" style="padding-bottom:8px;"><span class="btit">Explore 🔭</span></div>
+      <div class="srch"><span class="sic">🔍</span><input class="si" placeholder="Search all projects..." readonly /></div>
+      <div class="chips"><div class="chip on">All</div><div class="chip">Electronics</div><div class="chip">Agriculture</div><div class="chip">Coding</div><div class="chip">Biology</div></div>
+      <div style="padding:4px 16px 8px;font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,0.35);">3 projects available</div>
+      <div class="plc" onclick="go('s-detail')"><div class="plt cd">💻</div><div class="pli"><div class="pln">LED Traffic Light</div><div class="plm">Coding · Easy · 4 steps</div><div class="prg"><div class="prt"><div class="prf tf" style="width:0%"></div></div><span class="pp">Not started</span></div></div></div>
+      <div class="plc" onclick="go('s-detail')"><div class="plt bi">🔬</div><div class="pli"><div class="pln">Soil pH Tester</div><div class="plm">Biology · Medium · 7 steps</div><div class="prg"><div class="prt"><div class="prf tf" style="width:0%"></div></div><span class="pp">Not started</span></div></div></div>
+      <div class="plc" onclick="go('s-detail')"><div class="plt tl" style="background:linear-gradient(135deg,#0C4A6E,#0E7490);">🌊</div><div class="pli"><div class="pln">Rain Gauge Sensor</div><div class="plm">Agriculture · Easy · 5 steps</div><div class="prg"><div class="prt"><div class="prf tf" style="width:0%"></div></div><span class="pp">Not started</span></div></div></div>
+      <div class="bnav">
+        <div class="nb" onclick="go('s-home')"><span class="ni">🏠</span>Home</div>
+        <div class="nb on"><span class="ni">🔍</span>Explore</div>
+        <div class="nb" onclick="go('s-progress')"><span class="ni">📊</span>Progress</div>
+        <div class="nb" onclick="go('s-profile')"><span class="ni">👤</span>Profile</div>
+      </div>
+    </div>
+
+  </div><!-- end phone -->
+
+  <div class="annotations">
+    <div class="ann"><div class="an">1</div><div class="at"><strong>All learner screens in one phone.</strong> Nav bar, back buttons, and tappable cards switch between screens.</div></div>
+    <div class="ann"><div class="an">2</div><div class="at"><strong>Flow:</strong> Home → Project List (See All) → Project Detail → Step Detail → Mark Done → XP overlay → Back to Detail. AI Help accessible from Detail and Step via 🤖 button.</div></div>
+    <div class="ann"><div class="an">3</div><div class="at"><strong>Profile flow:</strong> Profile → Achievements → Certificate View. Profile → Leaderboard.</div></div>
+    <div class="ann"><div class="an">4</div><div class="at"><strong>Bell icon</strong> → Notifications screen. Back button returns to previous screen via history stack.</div></div>
+  </div>
+</div>
+</div>
+
+<script>
+const hist = [];
+
+function go(id) {
+  const phone = document.getElementById('ph');
+  const current = phone.querySelector('.screen.active');
+  if (current) hist.push(current.id);
+  phone.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const next = document.getElementById(id);
+  if (next) next.classList.add('active');
+}
+
+function back() {
+  if (!hist.length) return;
+  const prev = hist.pop();
+  const phone = document.getElementById('ph');
+  phone.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById(prev);
+  if (target) target.classList.add('active');
+}
+
+function showXP() {
+  document.getElementById('xpov').classList.add('show');
+}
+
+function finishStep() {
+  document.getElementById('xpov').classList.remove('show');
+  // Remove ALL step entries from history so back from detail
+  // goes straight to wherever user was before entering the project
+  while (hist.includes('s-step')) {
+    hist.splice(hist.lastIndexOf('s-step'), 1);
+  }
+  // Navigate to detail WITHOUT pushing current to history
+  const phone = document.getElementById('ph');
+  phone.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-detail').classList.add('active');
+}
+</script>
+</body>
+</html>

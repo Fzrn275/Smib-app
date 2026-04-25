@@ -8,7 +8,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Animated, Text } from 'react-native';
 
-export default function AnimatedNumber({ value, style, duration = 900, trigger }) {
+export default function AnimatedNumber({ value, style, duration = 500 }) {
   const animValue = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(0);
 
@@ -25,7 +25,7 @@ export default function AnimatedNumber({ value, style, duration = 900, trigger }
     }).start();
 
     return () => animValue.removeListener(listener);
-  }, [value, trigger]);
+  }, [value]);
 
   return <Text style={style}>{display}</Text>;
 }

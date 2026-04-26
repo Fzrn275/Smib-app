@@ -13,10 +13,11 @@ const AuthContext = createContext(null);
 // ─── PROVIDER ───────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }) {
-  const [session,  setSession]  = useState(null);
-  const [user,     setUser]     = useState(null);  // full row from `users` table
-  const [role,     setRole]     = useState(null);  // shorthand for user.role
-  const [loading,  setLoading]  = useState(true);  // true until first session check completes
+  const [session,        setSession]        = useState(null);
+  const [user,           setUser]           = useState(null);  // full row from `users` table
+  const [role,           setRole]           = useState(null);  // shorthand for user.role
+  const [loading,        setLoading]        = useState(true);  // true until first session check completes
+  const [justRegistered, setJustRegistered] = useState(false); // keep AuthFlow alive during success screen
 
   // ----------------------------------------------------------
   // On mount: restore existing session and subscribe to auth changes.
@@ -92,6 +93,9 @@ export function AuthProvider({ children }) {
     isLearner:  role === 'junior_learner' || role === 'senior_learner',
     isCreator:  role === 'creator' || role === 'verified_creator' || role === 'content_mentor',
     isParent:   role === 'parent',
+    // Registration flow — keep AuthFlow mounted while showing success screen
+    justRegistered,
+    setJustRegistered,
   };
 
   return (

@@ -20,6 +20,10 @@ import { useAuth }   from '../context/AuthContext';
 import {
   COLORS, GLASS, FONTS, SPACING, RADIUS, SPRING,
 } from '../theme';
+import { SCREENS, TAB_BAR_TOTAL_HEIGHT as TAB_BAR_TOTAL_HEIGHT_CONST } from './navConstants';
+
+// Re-export so any existing import from AppNavigator still resolves
+export { SCREENS, TAB_BAR_TOTAL_HEIGHT_CONST as TAB_BAR_TOTAL_HEIGHT };
 
 // ─── LEARNER SCREENS ─────────────────────────────────────────────────────────
 import HomeScreen          from '../screens/learner/HomeScreen';
@@ -49,38 +53,6 @@ import ParentDashboardScreen from '../screens/parent/ParentDashboardScreen';
 import ChildProgressScreen   from '../screens/parent/ChildProgressScreen';
 import ActivityFeedScreen    from '../screens/parent/ActivityFeedScreen';
 import ParentProfileScreen   from '../screens/parent/ParentProfileScreen';
-
-// ─── SCREEN NAME CONSTANTS ───────────────────────────────────────────────────
-// Import these in screen files to avoid navigation typos.
-
-export const SCREENS = {
-  // Learner
-  HOME:           'Home',
-  EXPLORE:        'Explore',
-  PROJECT_LIST:   'ProjectList',
-  PROJECT_DETAIL: 'ProjectDetail',
-  STEP_DETAIL:    'StepDetail',
-  PROGRESS:       'Progress',
-  ACHIEVEMENTS:   'Achievements',
-  CERTIFICATE:    'Certificate',
-  AI_HELP:        'AIHelp',
-  LEADERBOARD:    'Leaderboard',
-  PROFILE:        'Profile',
-  NOTIFICATIONS:  'Notifications',
-  // Creator
-  CREATOR_DASHBOARD:  'CreatorDashboard',
-  MY_PROJECTS:         'MyProjects',
-  CREATOR_PROJ_DETAIL: 'CreatorProjectDetail',
-  NEW_PROJECT:         'NewProject',
-  EDIT_PROJECT:        'EditProject',
-  ANALYTICS:           'Analytics',
-  CREATOR_PROFILE:     'CreatorProfile',
-  // Parent
-  PARENT_DASHBOARD: 'ParentDashboard',
-  CHILD_PROGRESS:   'ChildProgress',
-  ACTIVITY_FEED:    'ActivityFeed',
-  PARENT_PROFILE:   'ParentProfile',
-};
 
 // ─── SHARED STACK OPTIONS ────────────────────────────────────────────────────
 
@@ -211,8 +183,7 @@ function ParentProfileStack() {
 
 // ─── ANIMATED TAB BAR ────────────────────────────────────────────────────────
 
-const TAB_HEIGHT = 68;
-export const TAB_BAR_TOTAL_HEIGHT = TAB_HEIGHT; // screens import this for scroll padding
+const TAB_HEIGHT = 68; // local alias; canonical value lives in navConstants
 
 function SmibTabBar({ state, descriptors, navigation }) {
   const insets       = useSafeAreaInsets();
@@ -330,7 +301,7 @@ function LearnerTabs() {
   return (
     <LearnerTab.Navigator
       tabBar={(props) => <SmibTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, sceneContainerStyle: { backgroundColor: 'transparent' } }}
     >
       <LearnerTab.Screen
         name="HomeTab"
@@ -372,7 +343,7 @@ function CreatorTabs() {
   return (
     <CreatorTab.Navigator
       tabBar={(props) => <SmibTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, sceneContainerStyle: { backgroundColor: 'transparent' } }}
     >
       <CreatorTab.Screen
         name="DashboardTab"
@@ -414,7 +385,7 @@ function ParentTabs() {
   return (
     <ParentTab.Navigator
       tabBar={(props) => <SmibTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, sceneContainerStyle: { backgroundColor: 'transparent' } }}
     >
       <ParentTab.Screen
         name="ParentHomeTab"

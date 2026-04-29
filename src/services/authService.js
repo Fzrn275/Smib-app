@@ -136,8 +136,9 @@ export async function getUserProfile(userId) {
       .from('users')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!data) throw new Error('User profile not found.');
     return data;
   } catch (err) {
     throw new Error(err.message || 'Could not load user profile.');

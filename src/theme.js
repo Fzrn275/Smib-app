@@ -43,9 +43,58 @@ export const COLORS = {
   userBubble:    '#0C1A2E',
 
   // Input states
-  inputBorderDefault: 'rgba(255,255,255,0.3)',
-  inputBorderFocus:   'rgba(103,232,249,0.7)',
-  inputBorderError:   'rgba(239,68,68,0.7)',
+  inputBorderDefault:    'rgba(255,255,255,0.3)',
+  inputBorderFocus:      'rgba(103,232,249,0.7)',  // top border, focused
+  inputBorderFocusLeft:  'rgba(103,232,249,0.5)',  // left border, focused
+  inputBorderError:      'rgba(239,68,68,0.7)',    // top border, error
+  inputBorderErrorLeft:  'rgba(239,68,68,0.5)',    // left border, error
+
+  // ── Utility colours ─────────────────────────────────────────────────
+  white:      '#fff',       // pure white — button text, icons on coloured bg
+  errorLight: '#FCA5A5',    // soft rose for error message text
+  cardDark:   '#0C2030',    // dark navy panel for modals / bottom sheets
+  purple:     '#A78BFA',    // light violet accent (certificates)
+
+  // ── Dark overlays ────────────────────────────────────────────────────
+  overlay25: 'rgba(0,0,0,0.25)',
+  overlay30: 'rgba(0,0,0,0.30)',
+  overlay50: 'rgba(0,0,0,0.50)',
+  overlay60: 'rgba(0,0,0,0.60)',
+  overlay75: 'rgba(0,0,0,0.75)',
+
+  // ── Error surface family ─────────────────────────────────────────────
+  errorBgSubtle: 'rgba(239,68,68,0.10)',
+  errorBg:       'rgba(239,68,68,0.12)',
+  errorBorder:   'rgba(239,68,68,0.30)',
+
+  // ── Gold / amber surface family ──────────────────────────────────────
+  goldBg:       'rgba(245,158,11,0.08)',
+  goldBgMid:    'rgba(245,158,11,0.12)',
+  goldBgStrong: 'rgba(245,158,11,0.15)',
+  goldBgDeep:   'rgba(245,158,11,0.20)',
+  goldBorder:   'rgba(245,158,11,0.30)',
+
+  // ── Cyan surface family ──────────────────────────────────────────────
+  cyanBgSubtle:  'rgba(103,232,249,0.06)',
+  cyanBg:        'rgba(103,232,249,0.10)',
+  cyanBgMid:     'rgba(103,232,249,0.12)',
+  cyanBorderLight: 'rgba(103,232,249,0.25)',
+  cyanBorder:    'rgba(103,232,249,0.30)',
+
+  // ── Teal surface family ──────────────────────────────────────────────
+  tealBg:         'rgba(14,116,144,0.10)',
+  tealBgMid:      'rgba(14,116,144,0.18)',
+  tealBgStrong:   'rgba(14,116,144,0.25)',
+  tealBgDisabled: 'rgba(14,116,144,0.40)',
+  tealBorder:     'rgba(14,116,144,0.30)',
+  tealBorderStrong: 'rgba(14,116,144,0.50)',
+
+  // ── Success surface family ───────────────────────────────────────────
+  successBg:       'rgba(34,197,94,0.10)',
+  successBgMid:    'rgba(34,197,94,0.12)',
+  successBgStrong: 'rgba(34,197,94,0.15)',
+  successBgDeep:   'rgba(34,197,94,0.20)',
+  successBorder:   'rgba(34,197,94,0.30)',
 };
 
 // ─── GRADIENTS ──────────────────────────────────────────────────────────────

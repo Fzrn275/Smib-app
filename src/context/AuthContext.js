@@ -53,22 +53,33 @@ export function AuthProvider({ children }) {
   // Called after every successful sign-in.
   // ----------------------------------------------------------
   async function fetchUserProfile(userId) {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+    // Retry up to 4 times with increasing delay.
+    // Needed because onAuthStateChange fires before the users table INSERT
+    // completes during signup, causing maybeSingle() to return null initially.
+    for (let attempt = 0; attempt < 4; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 500 * attempt));
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setUser(data);
-      setRole(data.role);
-    } catch (err) {
-      console.error('AuthContext: failed to fetch user profile', err.message);
-    } finally {
-      setLoading(false);
+        if (data) {
+          setUser(data);
+          setRole(data.role);
+          setLoading(false);
+          return;
+        }
+        // data is null — row not inserted yet, retry
+      } catch (err) {
+        console.error('AuthContext: failed to fetch user profile', err.message);
+        break;
+      }
     }
+    setLoading(false);
   }
 
   // ----------------------------------------------------------
@@ -79,6 +90,24 @@ export function AuthProvider({ children }) {
     setUser(prev => ({ ...prev, ...updatedFields }));
   }
 
+  // ----------------------------------------------------------
+  // Re-fetches the user profile from the DB and updates state.
+  // Used by StepDetailScreen after XP/level changes so the
+  // rest of the app reflects the latest values immediately.
+  // ----------------------------------------------------------
+  function refreshUser() {
+    if (session?.user?.id) return fetchUserProfile(session.user.id);
+  }
+
+  // ----------------------------------------------------------
+  // Signs the current user out. onAuthStateChange fires and
+  // clears user/role automatically.
+  // ----------------------------------------------------------
+  async function signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw new Error(error.message);
+  }
+
   // ─── CONTEXT VALUE ──────────────────────────────────────────────────────
 
   const value = {
@@ -86,7 +115,9 @@ export function AuthProvider({ children }) {
     user,         // Full `users` table row
     role,         // Shorthand: user.role
     loading,      // True while session is being restored
+    signOut,      // Sign out current user
     updateUser,   // Update local user state after profile edits
+    refreshUser,  // Re-fetch full profile from DB (call after XP/level changes)
     fetchUserProfile, // Re-fetch from DB (e.g. after XP changes)
 
     // Convenience role checks used by RootNavigator and screens

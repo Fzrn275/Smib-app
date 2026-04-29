@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "S-MIB",
-    "slug": "smib-app",
+    "slug": "s-mib",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -32,8 +32,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "smib-app"
+        "projectId": "0ddaf93a-94bf-444e-8f98-6fdf0b4cb78c"
       }
-    }
+    },
+    "owner": "nazz752"
   }
 }

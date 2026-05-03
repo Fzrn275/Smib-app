@@ -4,15 +4,17 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Modal,
+  ActivityIndicator, Modal, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons }          from '@expo/vector-icons';
 
-import { useAuth }            from '../../context/AuthContext';
-import * as authService       from '../../services/authService';
-import { supabase }           from '../../services/supabaseClient';
-import { getCreatorProjects } from '../../services/projectService';
+import { useAuth }                        from '../../context/AuthContext';
+import * as authService                   from '../../services/authService';
+import { SCREENS, TAB_BAR_TOTAL_HEIGHT } from '../../navigation/navConstants';
+import {
+  getCreatorProjects, getCreatorProfileByUserId, getProjectEnrolmentCount,
+} from '../../services/projectService';
 import Creator         from '../../models/Creator';
 import VerifiedCreator from '../../models/VerifiedCreator';
 import {
@@ -34,8 +36,7 @@ export default function CreatorProfileScreen({ navigation }) {
   useEffect(() => {
     async function load() {
       try {
-        const { data: creatorRow } = await supabase
-          .from('creators').select('*').eq('user_id', user.id).maybeSingle();
+        const creatorRow = await getCreatorProfileByUserId(user.id);
         setCreator(creatorRow);
         // Build Creator or VerifiedCreator model and call getPublicProfile()
         if (creatorRow) {
@@ -52,9 +53,7 @@ export default function CreatorProfileScreen({ navigation }) {
 
           let total = 0;
           for (const p of projs.filter(pr => pr.status === 'published')) {
-            const { count } = await supabase
-              .from('progress').select('*', { count: 'exact', head: true }).eq('project_id', p.id);
-            total += count ?? 0;
+            total += await getProjectEnrolmentCount(p.id);
           }
           setStudents(total);
         }
@@ -72,6 +71,27 @@ export default function CreatorProfileScreen({ navigation }) {
     try { await authService.signOut(); } catch { setSigningOut(false); setSignOutModal(false); }
   }
 
+  async function handleDeleteAccount() {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all your data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await authService.deleteAccount();
+            } catch (err) {
+              Alert.alert('Error', err.message);
+            }
+          },
+        },
+      ]
+    );
+  }
+
   const initial = (user?.name ?? 'C').charAt(0).toUpperCase();
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={COLORS.aiCyan} size="large" /></View>;
@@ -79,7 +99,7 @@ export default function CreatorProfileScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: insets.bottom + 90 }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: TAB_BAR_TOTAL_HEIGHT + insets.bottom }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Avatar */}
@@ -123,10 +143,10 @@ export default function CreatorProfileScreen({ navigation }) {
         {/* Settings list */}
         <View style={styles.settingsList}>
           {[
-            { icon: 'folder-outline',    label: 'My Projects',   onPress: () => navigation.navigate('MyProjects') },
-            { icon: 'bar-chart-outline', label: 'Analytics',     onPress: () => navigation.navigate('Analytics') },
-            { icon: 'notifications-outline', label: 'Notifications', onPress: () => {} },
-            { icon: 'document-text-outline', label: 'Creator Guidelines', onPress: () => {} },
+            { icon: 'folder-outline',        label: 'My Projects',        onPress: () => navigation.navigate(SCREENS.MY_PROJECTS) },
+            { icon: 'bar-chart-outline',     label: 'Analytics',          onPress: () => navigation.navigate(SCREENS.ANALYTICS) },
+            { icon: 'notifications-outline', label: 'Notifications',      onPress: () => {} },
+            { icon: 'shield-outline',        label: 'Privacy & Security', onPress: () => navigation.navigate(SCREENS.PRIVACY_SECURITY) },
           ].map(item => (
             <TouchableOpacity key={item.label} style={styles.settingsRow} onPress={item.onPress} activeOpacity={0.7}>
               <View style={styles.settingsIcon}>
@@ -143,6 +163,14 @@ export default function CreatorProfileScreen({ navigation }) {
               <Ionicons name="log-out-outline" size={18} color={COLORS.error} />
             </View>
             <Text style={[styles.settingsLabel, { color: COLORS.error }]}>Sign Out</Text>
+          </TouchableOpacity>
+
+          {/* Delete account */}
+          <TouchableOpacity style={styles.settingsRow} onPress={handleDeleteAccount} activeOpacity={0.7}>
+            <View style={[styles.settingsIcon, { backgroundColor: COLORS.errorBgSubtle }]}>
+              <Ionicons name="trash-outline" size={18} color={COLORS.error} />
+            </View>
+            <Text style={[styles.settingsLabel, { color: COLORS.error }]}>Delete Account</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

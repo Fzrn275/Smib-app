@@ -8,10 +8,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAuth }          from '../../context/AuthContext';
-import { supabase }         from '../../services/supabaseClient';
-import { getActivityFeed }  from '../../services/progressService';
-import { getUserProfile }   from '../../services/authService';
+import { useAuth }                        from '../../context/AuthContext';
+import { TAB_BAR_TOTAL_HEIGHT }          from '../../navigation/navConstants';
+import { getLinkedChildren }              from '../../services/authService';
+import { getActivityFeed }               from '../../services/progressService';
 import {
   COLORS, FONTS, TYPE, SPACING, RADIUS,
 } from '../../theme';
@@ -46,7 +46,7 @@ export default function ActivityFeedScreen({ navigation }) {
   const { user } = useAuth();
 
   const [children,    setChildren]    = useState([]);
-  const [childIdx,    setChildIdx]    = useState(0); // -1 = All
+  const [childIdx,    setChildIdx]    = useState(-1); // -1 = All
   const [activities,  setActivities]  = useState({});   // { childId: [...] }
   const [loading,     setLoading]     = useState(true);
   const [refreshing,  setRefreshing]  = useState(false);
@@ -56,14 +56,9 @@ export default function ActivityFeedScreen({ navigation }) {
     if (!user) return;
     try {
       setError('');
-      const { data: links } = await supabase
-        .from('parent_student_links')
-        .select('student_id')
-        .eq('parent_id', user.id);
-
-      const childIds = (links ?? []).map(l => l.student_id);
-      const profiles  = await Promise.all(childIds.map(id => getUserProfile(id)));
+      const profiles = await getLinkedChildren(user.id);
       setChildren(profiles);
+      const childIds = profiles.map(c => c.id);
 
       const activityMap = {};
       for (const id of childIds) {
@@ -93,7 +88,7 @@ export default function ActivityFeedScreen({ navigation }) {
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: insets.bottom + 90 }]}
+      contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: TAB_BAR_TOTAL_HEIGHT + insets.bottom }]}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.aiCyan} />}
     >

@@ -54,6 +54,9 @@ import ChildProgressScreen   from '../screens/parent/ChildProgressScreen';
 import ActivityFeedScreen    from '../screens/parent/ActivityFeedScreen';
 import ParentProfileScreen   from '../screens/parent/ParentProfileScreen';
 
+// ─── SHARED SCREENS ──────────────────────────────────────────────────────────
+import PrivacySecurityScreen from '../screens/shared/PrivacySecurityScreen';
+
 // ─── SHARED STACK OPTIONS ────────────────────────────────────────────────────
 
 const STACK_OPTS = {
@@ -254,7 +257,7 @@ function SmibTabBar({ state, descriptors, navigation }) {
           ? iconFn({
               focused: isFocused,
               color:   isFocused ? COLORS.navActiveText : COLORS.navInactive,
-              size:    22,
+              size:    isFocused ? 24 : 20,
             })
           : null;
 
@@ -436,8 +439,9 @@ export default function AppNavigator() {
         cardStyle:   { backgroundColor: 'transparent' },
       }}
     >
-      <AppStack.Screen name="MainTabs"           component={MainTabs} />
-      <AppStack.Screen name={SCREENS.NOTIFICATIONS} component={NotificationsScreen} />
+      <AppStack.Screen name="MainTabs"               component={MainTabs} />
+      <AppStack.Screen name={SCREENS.NOTIFICATIONS}  component={NotificationsScreen} />
+      <AppStack.Screen name={SCREENS.PRIVACY_SECURITY} component={PrivacySecurityScreen} />
       <AppStack.Screen
         name={SCREENS.AI_HELP}
         component={AIHelpScreen}
@@ -452,20 +456,18 @@ export default function AppNavigator() {
 const styles = StyleSheet.create({
   bar: {
     position:      'absolute',
-    bottom:        0,
-    left:          0,
-    right:         0,
+    bottom:        14,
+    alignSelf:     'center',
     flexDirection: 'row',
     alignItems:    'center',
+    borderRadius:  RADIUS.pill,
+    padding:       5,
+    gap:           2,
     overflow:      'hidden',
-    // Floating card look
-    borderTopLeftRadius:  RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
   },
   barGlass: {
     ...GLASS.nav,
-    borderTopLeftRadius:  RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
+    borderRadius: RADIUS.pill,
   },
   pill: {
     position:        'absolute',
@@ -475,7 +477,7 @@ const styles = StyleSheet.create({
     borderRadius:    RADIUS.lg,
   },
   tab: {
-    flex:           1,
+    minWidth:       72,
     height:         TAB_HEIGHT,
     alignItems:     'center',
     justifyContent: 'center',

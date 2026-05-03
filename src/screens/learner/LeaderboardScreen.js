@@ -7,38 +7,19 @@ import {
   StyleSheet, Animated, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient }    from 'expo-linear-gradient';
 import { Ionicons }          from '@expo/vector-icons';
 
 import { useAuth }                       from '../../context/AuthContext';
 import { TAB_BAR_TOTAL_HEIGHT }          from '../../navigation/navConstants';
 import {
-  COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, SPRING,
+  COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, SPRING, GRADIENTS,
 } from '../../theme';
-import { supabase } from '../../services/supabaseClient';
+import { getLeaderboard } from '../../services/authService';
 
 // ─── SCOPE TABS ──────────────────────────────────────────────────────────────
 
-const SCOPES = ['My School', 'Sarawak', 'Global'];
-
-// ─── FETCH LEADERBOARD ───────────────────────────────────────────────────────
-
-async function fetchLeaderboard(scope, schoolName, limit = 50) {
-  let query = supabase
-    .from('users')
-    .select('id, name, school_name, xp, level, avatar_url, role')
-    .in('role', ['junior_learner', 'senior_learner'])
-    .order('xp', { ascending: false })
-    .limit(limit);
-
-  if (scope === 'My School' && schoolName) {
-    query = query.eq('school_name', schoolName);
-  }
-  // Sarawak and Global both return all learners (no state/region filter available)
-
-  const { data, error } = await query;
-  if (error) throw new Error(error.message || 'Could not load leaderboard.');
-  return data ?? [];
-}
+const SCOPES = ['My School', 'Sarawak'];
 
 // ─── RANK MEDAL ──────────────────────────────────────────────────────────────
 
@@ -147,15 +128,14 @@ export default function LeaderboardScreen({ navigation }) {
   const [rows,      setRows]      = useState([]);
   const [loading,   setLoading]   = useState(true);
 
-  const tabSlideA  = useRef(new Animated.Value(0)).current;
-  const [tabWidths, setTabWidths] = useState([0, 0, 0]);
   const fadeA      = useRef(new Animated.Value(0)).current;
 
   // ─── Load ─────────────────────────────────────────────────────────────────
   const load = useCallback(async (s) => {
     setLoading(true);
     try {
-      const data = await fetchLeaderboard(s, user?.school_name);
+      const mappedScope = s === 'My School' ? 'school' : 'global'; // 'Sarawak' → global query, no school filter
+      const data = await getLeaderboard(mappedScope, user?.school_name);
       setRows(data);
     } catch {
       setRows([]);
@@ -169,14 +149,8 @@ export default function LeaderboardScreen({ navigation }) {
 
   useEffect(() => { load(scope); }, [scope]);
 
-  // ─── Animated tab pill ────────────────────────────────────────────────────
-  function handleTabPress(tab, index) {
+  function handleTabPress(tab) {
     setScope(tab);
-    // Slide pill to selected tab
-    const offset = tabWidths.slice(0, index).reduce((a, b) => a + b, 0);
-    Animated.spring(tabSlideA, {
-      toValue: offset, tension: SPRING.card.tension, friction: SPRING.card.friction, useNativeDriver: true,
-    }).start();
   }
 
   // ─── My rank ──────────────────────────────────────────────────────────────
@@ -192,17 +166,27 @@ export default function LeaderboardScreen({ navigation }) {
         }}
       >
         {/* ── HEADER ─────────────────────────────────────────────── */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color={COLORS.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Leaderboard</Text>
-          {myRank > 0 && (
-            <View style={styles.myRankBadge}>
-              <Text style={styles.myRankText}>You #{myRank}</Text>
-            </View>
-          )}
-        </View>
+        <LinearGradient
+          {...GRADIENTS.header}
+          style={{
+            borderBottomLeftRadius:  36,
+            borderBottomRightRadius: 36,
+            paddingBottom: SPACING.lg,
+            marginBottom:  SPACING.md,
+          }}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={24} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.title}>Leaderboard</Text>
+            {myRank > 0 && (
+              <View style={styles.myRankBadge}>
+                <Text style={styles.myRankText}>You #{myRank}</Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
 
         {/* ── SCOPE TABS ─────────────────────────────────────────── */}
         <View style={styles.tabBar}>
@@ -210,12 +194,7 @@ export default function LeaderboardScreen({ navigation }) {
             <TouchableOpacity
               key={tab}
               style={[styles.tab, scope === tab && styles.tabActive]}
-              onPress={() => handleTabPress(tab, i)}
-              onLayout={(e) => {
-                const w = [...tabWidths];
-                w[i] = e.nativeEvent.layout.width;
-                setTabWidths(w);
-              }}
+              onPress={() => handleTabPress(tab)}
               activeOpacity={0.8}
             >
               <Text style={[styles.tabText, scope === tab && styles.tabTextActive]}>
@@ -273,7 +252,6 @@ const styles = StyleSheet.create({
     flexDirection:     'row',
     alignItems:        'center',
     paddingHorizontal: SPACING.lg,
-    marginBottom:      SPACING.lg,
     gap:               SPACING.md,
   },
   backBtn: {

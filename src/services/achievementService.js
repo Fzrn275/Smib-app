@@ -64,8 +64,9 @@ export async function getCertificateByCode(verificationCode) {
         projects ( title, category )
       `)
       .eq('verification_code', verificationCode)
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!data) throw new Error('Certificate not found.');
     return data;
   } catch (err) {
     throw new Error(err.message || 'Certificate not found.');

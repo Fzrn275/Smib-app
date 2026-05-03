@@ -16,7 +16,6 @@ CREATE TABLE users (
                   'senior_learner',
                   'creator',
                   'verified_creator',
-                  'content_mentor',
                   'parent'
                 )) NOT NULL,
   grade_level   VARCHAR(20),
@@ -26,7 +25,8 @@ CREATE TABLE users (
   xp            INTEGER DEFAULT 0,
   level         INTEGER DEFAULT 1,
   created_at    TIMESTAMPTZ DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ DEFAULT NOW()
+  updated_at    TIMESTAMPTZ DEFAULT NOW(),
+  deleted_at    TIMESTAMPTZ
 );
 
 -- 2. CREATORS
@@ -35,8 +35,7 @@ CREATE TABLE creators (
   user_id      UUID REFERENCES users(id) ON DELETE CASCADE,
   creator_type VARCHAR(30) CHECK (creator_type IN (
                   'creator',
-                  'verified_creator',
-                  'content_mentor'
+                  'verified_creator'
                 )) NOT NULL,
   organisation VARCHAR(150),
   focus_area   VARCHAR(100),
@@ -68,6 +67,7 @@ CREATE TABLE projects (
                      )) DEFAULT 'draft',
   tags               VARCHAR(50)[],
   cover_image_url    VARCHAR(500),
+  youtube_url        VARCHAR(500),
   created_at         TIMESTAMPTZ DEFAULT NOW(),
   updated_at         TIMESTAMPTZ DEFAULT NOW()
 );
@@ -207,4 +207,279 @@ CREATE INDEX idx_parent_links_parent      ON parent_student_links(parent_id);
 CREATE INDEX idx_parent_links_student     ON parent_student_links(student_id);
 CREATE INDEX idx_notifications_user       ON notifications(user_id);
 CREATE INDEX idx_notifications_unread     ON notifications(user_id, is_read) WHERE is_read = FALSE;
+
+-- =============================================================
+-- AUTH TRIGGER — auto-insert into public.users on signup
+-- =============================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.users (id, email, name, role, password_hash)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'name', 'New User'),
+    COALESCE(NEW.raw_user_meta_data->>'role', 'junior_learner'),
+    'SUPABASE_MANAGED'
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  IF COALESCE(NEW.raw_user_meta_data->>'role', '') IN ('creator', 'verified_creator') THEN
+    INSERT INTO public.creators (user_id, creator_type)
+    VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'role', 'creator'))
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- =============================================================
+-- ROW LEVEL SECURITY POLICIES
+-- All tables have RLS enabled by Supabase by default.
+-- These policies must be run in the Supabase SQL Editor.
+-- Each block uses DROP IF EXISTS so it is safe to re-run.
+-- =============================================================
+
+-- USERS -------------------------------------------------------
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "users_read"        ON users;
+DROP POLICY IF EXISTS "users_insert_own"  ON users;
+DROP POLICY IF EXISTS "users_update_own"  ON users;
+
+CREATE POLICY "users_read" ON users
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "users_insert_own" ON users
+  FOR INSERT
+  WITH CHECK (
+    id = auth.uid()
+    OR auth.uid() IS NULL
+  );
+
+CREATE POLICY "users_update_own" ON users
+  FOR UPDATE TO authenticated
+  USING (id = auth.uid()) WITH CHECK (id = auth.uid());
+
+-- CREATORS ----------------------------------------------------
+ALTER TABLE creators ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "creators_read"        ON creators;
+DROP POLICY IF EXISTS "creators_insert_own"  ON creators;
+DROP POLICY IF EXISTS "creators_update_own"  ON creators;
+
+CREATE POLICY "creators_read" ON creators
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "creators_insert_own" ON creators
+  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "creators_update_own" ON creators
+  FOR UPDATE TO authenticated
+  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- PROJECTS ----------------------------------------------------
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "projects_read"           ON projects;
+DROP POLICY IF EXISTS "projects_creator_insert" ON projects;
+DROP POLICY IF EXISTS "projects_creator_update" ON projects;
+DROP POLICY IF EXISTS "projects_creator_delete" ON projects;
+
+CREATE POLICY "projects_read" ON projects
+  FOR SELECT TO authenticated
+  USING (
+    status = 'published'
+    OR creator_id IN (SELECT id FROM creators WHERE user_id = auth.uid())
+  );
+
+CREATE POLICY "projects_creator_insert" ON projects
+  FOR INSERT TO authenticated
+  WITH CHECK (creator_id IN (SELECT id FROM creators WHERE user_id = auth.uid()));
+
+CREATE POLICY "projects_creator_update" ON projects
+  FOR UPDATE TO authenticated
+  USING (creator_id IN (SELECT id FROM creators WHERE user_id = auth.uid()));
+
+CREATE POLICY "projects_creator_delete" ON projects
+  FOR DELETE TO authenticated
+  USING (creator_id IN (SELECT id FROM creators WHERE user_id = auth.uid()));
+
+-- STEPS -------------------------------------------------------
+ALTER TABLE steps ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "steps_read"  ON steps;
+DROP POLICY IF EXISTS "steps_write" ON steps;
+
+CREATE POLICY "steps_read" ON steps
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "steps_write" ON steps
+  FOR ALL TO authenticated
+  USING (project_id IN (
+    SELECT id FROM projects
+    WHERE creator_id IN (SELECT id FROM creators WHERE user_id = auth.uid())
+  ))
+  WITH CHECK (project_id IN (
+    SELECT id FROM projects
+    WHERE creator_id IN (SELECT id FROM creators WHERE user_id = auth.uid())
+  ));
+
+-- MATERIALS ---------------------------------------------------
+ALTER TABLE materials ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "materials_read"  ON materials;
+DROP POLICY IF EXISTS "materials_write" ON materials;
+
+CREATE POLICY "materials_read" ON materials
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "materials_write" ON materials
+  FOR ALL TO authenticated
+  USING (project_id IN (
+    SELECT id FROM projects
+    WHERE creator_id IN (SELECT id FROM creators WHERE user_id = auth.uid())
+  ))
+  WITH CHECK (project_id IN (
+    SELECT id FROM projects
+    WHERE creator_id IN (SELECT id FROM creators WHERE user_id = auth.uid())
+  ));
+
+-- PROGRESS ----------------------------------------------------
+ALTER TABLE progress ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "progress_read"        ON progress;
+DROP POLICY IF EXISTS "progress_insert_own"  ON progress;
+DROP POLICY IF EXISTS "progress_update_own"  ON progress;
+
+-- Students read own rows; parents read linked children; creators read for their projects
+CREATE POLICY "progress_read" ON progress
+  FOR SELECT TO authenticated
+  USING (
+    student_id = auth.uid()
+    OR student_id IN (SELECT student_id FROM parent_student_links WHERE parent_id = auth.uid())
+    OR project_id IN (
+      SELECT id FROM projects
+      WHERE creator_id IN (SELECT id FROM creators WHERE user_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "progress_insert_own" ON progress
+  FOR INSERT TO authenticated WITH CHECK (student_id = auth.uid());
+
+CREATE POLICY "progress_update_own" ON progress
+  FOR UPDATE TO authenticated
+  USING (student_id = auth.uid()) WITH CHECK (student_id = auth.uid());
+
+-- STEP_SUBMISSIONS --------------------------------------------
+ALTER TABLE step_submissions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "step_submissions_own" ON step_submissions;
+
+CREATE POLICY "step_submissions_own" ON step_submissions
+  FOR ALL TO authenticated
+  USING (student_id = auth.uid())
+  WITH CHECK (student_id = auth.uid());
+
+-- ACHIEVEMENTS ------------------------------------------------
+ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "achievements_read"   ON achievements;
+DROP POLICY IF EXISTS "achievements_insert" ON achievements;
+
+CREATE POLICY "achievements_read" ON achievements
+  FOR SELECT TO authenticated
+  USING (
+    student_id = auth.uid()
+    OR student_id IN (SELECT student_id FROM parent_student_links WHERE parent_id = auth.uid())
+  );
+
+CREATE POLICY "achievements_insert" ON achievements
+  FOR INSERT TO authenticated WITH CHECK (student_id = auth.uid());
+
+-- CERTIFICATES ------------------------------------------------
+ALTER TABLE certificates ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "certificates_read"   ON certificates;
+DROP POLICY IF EXISTS "certificates_insert" ON certificates;
+
+CREATE POLICY "certificates_read" ON certificates
+  FOR SELECT TO authenticated
+  USING (
+    student_id = auth.uid()
+    OR student_id IN (SELECT student_id FROM parent_student_links WHERE parent_id = auth.uid())
+  );
+
+CREATE POLICY "certificates_insert" ON certificates
+  FOR INSERT TO authenticated WITH CHECK (student_id = auth.uid());
+
+-- STREAKS -----------------------------------------------------
+ALTER TABLE streaks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "streaks_own" ON streaks;
+
+CREATE POLICY "streaks_own" ON streaks
+  FOR ALL TO authenticated
+  USING (student_id = auth.uid())
+  WITH CHECK (student_id = auth.uid());
+
+-- NOTIFICATIONS -----------------------------------------------
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "notifications_read"   ON notifications;
+DROP POLICY IF EXISTS "notifications_insert" ON notifications;
+DROP POLICY IF EXISTS "notifications_update" ON notifications;
+
+CREATE POLICY "notifications_read" ON notifications
+  FOR SELECT TO authenticated USING (user_id = auth.uid());
+
+CREATE POLICY "notifications_insert" ON notifications
+  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "notifications_update" ON notifications
+  FOR UPDATE TO authenticated
+  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- PARENT_STUDENT_LINKS ----------------------------------------
+ALTER TABLE parent_student_links ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "parent_links_read"   ON parent_student_links;
+DROP POLICY IF EXISTS "parent_links_insert" ON parent_student_links;
+
+CREATE POLICY "parent_links_read" ON parent_student_links
+  FOR SELECT TO authenticated
+  USING (parent_id = auth.uid() OR student_id = auth.uid());
+
+CREATE POLICY "parent_links_insert" ON parent_student_links
+  FOR INSERT TO authenticated WITH CHECK (parent_id = auth.uid());
 CREATE INDEX idx_users_xp                 ON users(xp DESC);
+
+-- ATOMIC XP INCREMENT FUNCTION
+-- Safely increments XP and recalculates level in a single DB operation.
+-- Prevents race condition where two clients read the same XP value concurrently.
+CREATE OR REPLACE FUNCTION public.increment_xp(p_user_id UUID, p_xp_amount INT)
+RETURNS TABLE(new_xp INT, new_level INT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_new_xp    INT;
+  v_new_level INT;
+BEGIN
+  UPDATE users
+  SET
+    xp         = xp + p_xp_amount,
+    level      = LEAST(FLOOR((xp + p_xp_amount) / 1000) + 1, 10),
+    updated_at = NOW()
+  WHERE id = p_user_id
+  RETURNING xp, level INTO v_new_xp, v_new_level;
+
+  RETURN QUERY SELECT v_new_xp, v_new_level;
+END;
+$$;

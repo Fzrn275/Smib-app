@@ -18,7 +18,6 @@ const ROLES = [
   { key: 'junior_learner', label: 'Learner',  emoji: '🎓', desc: 'Learn STEM at your own pace' },
   { key: 'creator',        label: 'Creator',  emoji: '✏️',  desc: 'Upload and manage projects' },
   { key: 'parent',         label: 'Parent',   emoji: '👨‍👩‍👧', desc: "Monitor your child's progress" },
-  { key: 'content_mentor', label: 'Mentor',   emoji: '🤝',  desc: 'Guide and answer questions' },
 ];
 
 function RoleCard({ role, selected, onPress }) {
@@ -79,7 +78,7 @@ export default function RegisterStep1Screen({ navigation }) {
           Step 1 of 2 — Choose your role
         </Text>
 
-        {/* Role grid */}
+        {/* Role grid — 2 top, 1 centered bottom */}
         <View style={styles.grid}>
           <View style={styles.gridRow}>
             {ROLES.slice(0, 2).map(r => (
@@ -91,15 +90,12 @@ export default function RegisterStep1Screen({ navigation }) {
               />
             ))}
           </View>
-          <View style={styles.gridRow}>
-            {ROLES.slice(2, 4).map(r => (
-              <RoleCard
-                key={r.key}
-                role={r}
-                selected={selected === r.key}
-                onPress={() => setSelected(r.key)}
-              />
-            ))}
+          <View style={styles.gridRowCenter}>
+            <RoleCard
+              role={ROLES[2]}
+              selected={selected === ROLES[2].key}
+              onPress={() => setSelected(ROLES[2].key)}
+            />
           </View>
         </View>
 
@@ -157,6 +153,10 @@ const styles = StyleSheet.create({
   gridRow: {
     flexDirection: 'row',
     gap: SPACING.md,
+  },
+  gridRowCenter: {
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   roleCard: {
     flex: 1,

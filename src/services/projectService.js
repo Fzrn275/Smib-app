@@ -329,6 +329,60 @@ export async function addStep(projectId, stepData) {
 }
 
 /**
+ * Fetches aggregated stats for a creator's dashboard.
+ * Returns { creatorRow, published, draft, students, avgCompletion }
+ * so CreatorDashboardScreen doesn't need a direct supabase import.
+ */
+export async function getCreatorStats(userId) {
+  try {
+    const { data: creatorRow, error: creatorErr } = await supabase
+      .from('creators')
+      .select('id, organisation, focus_area, bio, is_verified, verified_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (creatorErr) throw new Error('Could not load creator profile.');
+    if (!creatorRow) throw new Error('Creator profile not found. Please sign out and back in.');
+
+    const projs = await getCreatorProjects(creatorRow.id);
+
+    const published = projs.filter(p => p.status === 'published').length;
+    const draft     = projs.filter(p => p.status === 'draft').length;
+
+    let totalEnrolled   = 0;
+    let completionSum   = 0;
+    let completionCount = 0;
+
+    for (const proj of projs.filter(p => p.status === 'published')) {
+      const { count } = await supabase
+        .from('progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', proj.id);
+      totalEnrolled += count ?? 0;
+
+      const { data: pRows } = await supabase
+        .from('progress')
+        .select('progress_pct')
+        .eq('project_id', proj.id);
+      if (pRows?.length) {
+        completionSum   += pRows.reduce((s, r) => s + (r.progress_pct ?? 0), 0);
+        completionCount += pRows.length;
+      }
+    }
+
+    return {
+      creatorRow,
+      projects:      projs,
+      published,
+      draft,
+      students:      totalEnrolled,
+      avgCompletion: completionCount ? Math.round(completionSum / completionCount) : 0,
+    };
+  } catch (err) {
+    throw new Error(err.message || 'Could not load creator stats.');
+  }
+}
+
+/**
  * Adds a material to a project.
  */
 export async function addMaterial(projectId, materialData) {
@@ -343,5 +397,76 @@ export async function addMaterial(projectId, materialData) {
     return data;
   } catch (err) {
     throw new Error(err.message || 'Could not add material.');
+  }
+}
+
+/**
+ * Fetches the creators row (id only) for a given user UUID.
+ * Used by creator screens that need the creator_id to chain further queries.
+ */
+export async function getCreatorRowByUserId(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('creators')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw new Error('Could not load creator profile.');
+    if (!data) throw new Error('Creator profile not found. Please sign out and back in.');
+    return data;
+  } catch (err) {
+    throw new Error(err.message || 'Could not load creator profile.');
+  }
+}
+
+/**
+ * Fetches the full creators row for a given user UUID.
+ * Used by CreatorProfileScreen which needs organisation, bio, is_verified, etc.
+ */
+export async function getCreatorProfileByUserId(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('creators')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw new Error('Could not load creator profile.');
+    return data; // null is valid — creator row may not exist yet
+  } catch (err) {
+    throw new Error(err.message || 'Could not load creator profile.');
+  }
+}
+
+/**
+ * Returns an array of progress_pct values for all students enrolled in a project.
+ * Used for average completion calculation in AnalyticsScreen.
+ */
+export async function getProjectProgressPcts(projectId) {
+  try {
+    const { data, error } = await supabase
+      .from('progress')
+      .select('progress_pct')
+      .eq('project_id', projectId);
+    if (error) throw error;
+    return data ?? [];
+  } catch (err) {
+    throw new Error(err.message || 'Could not load project progress data.');
+  }
+}
+
+/**
+ * Deletes a project — enforces ownership via creator_id.
+ * Cascading deletes (steps, materials, progress) are handled by DB constraints.
+ */
+export async function deleteProject(projectId, creatorId) {
+  try {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId)
+      .eq('creator_id', creatorId);
+    if (error) throw error;
+  } catch (err) {
+    throw new Error(err.message || 'Could not delete project.');
   }
 }

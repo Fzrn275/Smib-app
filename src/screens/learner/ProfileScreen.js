@@ -12,10 +12,13 @@ import { LinearGradient }    from 'expo-linear-gradient';
 import { Ionicons }          from '@expo/vector-icons';
 
 import { useAuth }                       from '../../context/AuthContext';
+import { useLang }                       from '../../context/LanguageContext';
+import { t }                             from '../../i18n/strings';
 import { SCREENS, TAB_BAR_TOTAL_HEIGHT } from '../../navigation/navConstants';
+import * as authService                  from '../../services/authService';
 import {
   COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, SPRING,
-  getRankTitle,
+  getRankTitle, calculateXpInLevel, XP_PER_LEVEL,
 } from '../../theme';
 import { getProgressSummary }   from '../../services/progressService';
 import JuniorLearner from '../../models/JuniorLearner';
@@ -89,6 +92,7 @@ const sStyles = StyleSheet.create({
 
 export default function ProfileScreen({ navigation }) {
   const { user, signOut } = useAuth();
+  const { lang, toggleLanguage } = useLang();
   const insets = useSafeAreaInsets();
 
   const [summary,      setSummary]      = useState({ active: 0, completed: 0 });
@@ -124,6 +128,27 @@ export default function ProfileScreen({ navigation }) {
   }, [user?.id]);
 
   useEffect(() => { load(); }, [load]);
+
+  async function handleDeleteAccount() {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all your data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await authService.deleteAccount();
+            } catch (err) {
+              Alert.alert('Error', err.message);
+            }
+          },
+        },
+      ]
+    );
+  }
 
   async function handleSignOut() {
     Alert.alert(
@@ -230,7 +255,7 @@ export default function ProfileScreen({ navigation }) {
           </View>
           <View style={styles.xpBg}>
             <View style={[styles.xpFill, {
-              width: `${Math.max(((user?.xp ?? 0) % 1000) / 10, 2)}%`,
+              width: `${Math.max((calculateXpInLevel(user?.xp ?? 0) / XP_PER_LEVEL) * 100, 2)}%`,
             }]} />
           </View>
         </View>
@@ -259,21 +284,27 @@ export default function ProfileScreen({ navigation }) {
           <Text style={[styles.sectionLabel, { marginTop: SPACING.md }]}>Preferences</Text>
           <SettingsRow
             icon="language-outline"
-            label="Language"
-            onPress={() => {}} // Placeholder — future phase
+            label={`${t(lang, 'language')} — ${lang === 'en' ? 'English' : 'Bahasa Malaysia'}`}
+            onPress={toggleLanguage}
           />
           <SettingsRow
             icon="shield-outline"
-            label="Privacy & Security"
-            onPress={() => {}} // Placeholder — future phase
+            label={t(lang, 'privacySecurity')}
+            onPress={() => navigation.navigate(SCREENS.PRIVACY_SECURITY)}
           />
 
           <Text style={[styles.sectionLabel, { marginTop: SPACING.md }]}>Session</Text>
           <SettingsRow
             icon="log-out-outline"
-            label={signingOut ? 'Signing out…' : 'Sign Out'}
+            label={signingOut ? 'Signing out…' : t(lang, 'signOut')}
             danger
             onPress={handleSignOut}
+          />
+          <SettingsRow
+            icon="trash-outline"
+            label={t(lang, 'deleteAccount')}
+            danger
+            onPress={handleDeleteAccount}
           />
         </View>
       </ScrollView>

@@ -9,10 +9,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons }          from '@expo/vector-icons';
 
-import { useAuth }            from '../../context/AuthContext';
-import { supabase }           from '../../services/supabaseClient';
-import { getCreatorProjects } from '../../services/projectService';
-import { getActivityFeed }    from '../../services/progressService';
+import { useAuth }                    from '../../context/AuthContext';
+import { TAB_BAR_TOTAL_HEIGHT }      from '../../navigation/navConstants';
+import {
+  getCreatorProjects, getCreatorRowByUserId,
+  getProjectEnrolmentCount, getProjectProgressPcts,
+} from '../../services/projectService';
+import { getActivityFeed } from '../../services/progressService';
 import {
   COLORS, FONTS, TYPE, SPACING, RADIUS,
 } from '../../theme';
@@ -41,11 +44,13 @@ export default function AnalyticsScreen({ navigation }) {
       setError('');
       let cId = creatorId;
       if (!cId) {
-        const { data, error: e } = await supabase
-          .from('creators').select('id').eq('user_id', user.id).maybeSingle();
-        if (e) throw new Error('Could not load creator profile.');
-        if (!data) throw new Error('Creator profile not found. Please sign out and back in.');
-        cId = data.id;
+        const creatorRow = await getCreatorRowByUserId(user.id);
+        if (!creatorRow) {
+          setError('Creator profile not found. Please sign out and sign back in.');
+          setLoading(false);
+          return;
+        }
+        cId = creatorRow.id;
         setCreatorId(cId);
       }
 
@@ -60,18 +65,11 @@ export default function AnalyticsScreen({ navigation }) {
       let topCount = 0;
 
       for (const proj of projs.filter(p => p.status === 'published')) {
-        const { count } = await supabase
-          .from('progress')
-          .select('*', { count: 'exact', head: true })
-          .eq('project_id', proj.id);
-        const c = count ?? 0;
+        const c = await getProjectEnrolmentCount(proj.id);
         totalStudents += c;
         if (c > topCount) { topCount = c; topProject = proj; }
 
-        const { data: pRows } = await supabase
-          .from('progress')
-          .select('progress_pct')
-          .eq('project_id', proj.id);
+        const pRows = await getProjectProgressPcts(proj.id);
         if (pRows?.length) {
           completionSum   += pRows.reduce((s, r) => s + (r.progress_pct ?? 0), 0);
           completionCount += pRows.length;
@@ -105,7 +103,7 @@ export default function AnalyticsScreen({ navigation }) {
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: insets.bottom + 90 }]}
+      contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: TAB_BAR_TOTAL_HEIGHT + insets.bottom }]}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.aiCyan} />}
     >

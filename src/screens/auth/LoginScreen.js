@@ -20,13 +20,14 @@ import {
 export default function LoginScreen({ navigation }) {
   const insets = useSafeAreaInsets();
 
-  const [email,      setEmail]      = useState('');
-  const [password,   setPassword]   = useState('');
-  const [showPass,   setShowPass]   = useState(false);
-  const [loading,    setLoading]    = useState(false);
-  const [error,      setError]      = useState('');
-  const [emailFocus, setEmailFocus] = useState(false);
-  const [passFocus,  setPassFocus]  = useState(false);
+  const [email,         setEmail]         = useState('');
+  const [password,      setPassword]      = useState('');
+  const [showPass,      setShowPass]      = useState(false);
+  const [loading,       setLoading]       = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error,         setError]         = useState('');
+  const [emailFocus,    setEmailFocus]    = useState(false);
+  const [passFocus,     setPassFocus]     = useState(false);
 
   const btnScale = useRef(new Animated.Value(1)).current;
 
@@ -34,6 +35,20 @@ export default function LoginScreen({ navigation }) {
 
   const pressIn  = () => Animated.spring(btnScale, { toValue: 0.96, ...SPRING.default, useNativeDriver: true }).start();
   const pressOut = () => Animated.spring(btnScale, { toValue: 1,    ...SPRING.default, useNativeDriver: true }).start();
+
+  async function handleGoogleSignIn() {
+    if (googleLoading) return;
+    setGoogleLoading(true);
+    setError('');
+    try {
+      await authService.signInWithGoogle();
+      // onAuthStateChange in AuthContext handles routing
+    } catch (err) {
+      setError(err.message || 'Google sign-in failed. Please try again.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
 
   async function handleSignIn() {
     if (loading) return;
@@ -57,6 +72,7 @@ export default function LoginScreen({ navigation }) {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
         <ScrollView
           contentContainerStyle={[
@@ -158,9 +174,17 @@ export default function LoginScreen({ navigation }) {
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Google SSO (UI only, disabled) */}
-            <TouchableOpacity style={[styles.googleBtn]} disabled activeOpacity={1}>
-              <Text style={styles.googleBtnText}>Continue with Google  (Coming soon)</Text>
+            {/* Google SSO */}
+            <TouchableOpacity
+              style={[styles.googleBtn, googleLoading && { opacity: 0.6 }]}
+              onPress={handleGoogleSignIn}
+              disabled={googleLoading || loading}
+              activeOpacity={0.85}
+            >
+              {googleLoading
+                ? <ActivityIndicator color={COLORS.textPrimary} size="small" />
+                : <Text style={styles.googleBtnText}>Continue with Google</Text>
+              }
             </TouchableOpacity>
           </View>
 
@@ -291,17 +315,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
   },
   googleBtn: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: RADIUS.md,
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.45,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius:    RADIUS.md,
+    height:          50,
+    alignItems:      'center',
+    justifyContent:  'center',
+    borderWidth:     1,
+    borderColor:     'rgba(255,255,255,0.15)',
   },
   googleBtnText: {
     fontFamily: FONTS.body600,
-    fontSize: 13,
-    color: COLORS.textCaption,
+    fontSize:   13,
+    color:      COLORS.textPrimary,
   },
   footerRow: {
     flexDirection: 'row',

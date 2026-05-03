@@ -19,7 +19,6 @@ import {
   COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, SPRING,
 } from '../../theme';
 import { askAI, buildAIPayload } from '../../services/aiService';
-import ContentMentor from '../../models/ContentMentor';
 
 // ─── CHAT BUBBLE ─────────────────────────────────────────────────────────────
 
@@ -163,16 +162,7 @@ export default function AIHelpScreen({ navigation, route }) {
     setTimeout(scrollToBottom, 80);
 
     try {
-      let payload = buildAIPayload(user, project, step, text);
-      // If the user is a ContentMentor, use answerQuestion() to enrich the AI context
-      if (user?.role === 'content_mentor') {
-        const mentor = new ContentMentor(
-          user.id, user.name, user.email, user.role, user.avatar_url,
-          user.organisation ?? '', user.focus_area ?? '', user.bio ?? '',
-        );
-        const mentorCtx = mentor.answerQuestion({ projectId: project?.id, stepId: step?.id }, text);
-        payload = { ...payload, mentor_name: mentorCtx.mentorName, focus_area: mentorCtx.focusArea };
-      }
+      const payload = buildAIPayload(user, project, step, text);
       const reply = await askAI(payload);
       setMessages(prev => [
         ...prev.filter(m => m.id !== 'typing'),

@@ -12,8 +12,9 @@ import { Ionicons }          from '@expo/vector-icons';
 
 import { SCREENS, TAB_BAR_TOTAL_HEIGHT } from '../../navigation/navConstants';
 import {
-  COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, SPRING,
+  COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, SPRING, GRADIENTS,
 } from '../../theme';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getPublishedProjects }              from '../../services/projectService';
 import { getCategoryMeta, DIFF_COLOR }       from './HomeScreen';
 import { useAuth }   from '../../context/AuthContext';
@@ -149,7 +150,16 @@ export default function ExploreScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       {/* Sticky header */}
-      <View style={{ paddingTop: insets.top + SPACING.sm }}>
+      <LinearGradient
+        {...GRADIENTS.header}
+        style={{
+          borderBottomLeftRadius:  36,
+          borderBottomRightRadius: 36,
+          paddingTop:    insets.top + SPACING.sm,
+          paddingBottom: SPACING.lg,
+          marginBottom:  SPACING.md,
+        }}
+      >
         <Text style={styles.screenTitle}>Explore Projects</Text>
 
         {/* Search bar */}
@@ -196,7 +206,7 @@ export default function ExploreScreen({ navigation }) {
             {recommendedCount > 0 ? ` · ${recommendedCount} for your level` : ''}
           </Text>
         )}
-      </View>
+      </LinearGradient>
 
       {/* Content */}
       {loading ? (

@@ -1,6 +1,5 @@
 // src/screens/parent/ParentDashboardScreen.js
 // Screen 26 — p-dash — Parent Dashboard
-// Exception to Rule 3: queries parent_student_links directly (documented in CLAUDE.md)
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -10,11 +9,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons }          from '@expo/vector-icons';
 
-import { useAuth }             from '../../context/AuthContext';
-import { supabase }            from '../../services/supabaseClient';
-import { getChildProgress }    from '../../services/progressService';
-import { getUserProfile }      from '../../services/authService';
-import { getAchievements }     from '../../services/achievementService';
+import { useAuth }                        from '../../context/AuthContext';
+import { SCREENS, TAB_BAR_TOTAL_HEIGHT } from '../../navigation/navConstants';
+import { getLinkedChildren }              from '../../services/authService';
+import { getChildProgress }              from '../../services/progressService';
+import { getAchievements }               from '../../services/achievementService';
 import {
   COLORS, FONTS, TYPE, SPACING, RADIUS,
   calculateLevel, getRankTitle,
@@ -31,7 +30,7 @@ function ChildCard({ child, progress, achievements, navigation }) {
   return (
     <TouchableOpacity
       style={styles.childCard}
-      onPress={() => navigation.navigate('ChildProgress', { childId: child.id, childName: child.name })}
+      onPress={() => navigation.navigate(SCREENS.CHILD_PROGRESS, { childId: child.id, childName: child.name })}
       activeOpacity={0.8}
     >
       <View style={styles.childCardTop}>
@@ -86,24 +85,18 @@ export default function ParentDashboardScreen({ navigation }) {
     if (!user) return;
     try {
       setError('');
-      // Permitted direct Supabase call per CLAUDE.md Rule 3 exception
-      const { data: links, error: linksErr } = await supabase
-        .from('parent_student_links')
-        .select('student_id')
-        .eq('parent_id', user.id);
-      if (linksErr) throw new Error('Could not load children links.');
+      const childProfiles = await getLinkedChildren(user.id);
 
-      if (!links || links.length === 0) {
+      if (!childProfiles || childProfiles.length === 0) {
         setChildren([]);
         return;
       }
 
-      const childIds = links.map(l => l.student_id);
+      const childIds = childProfiles.map(c => c.id);
 
-      // Fetch each child's profile + progress + achievements in parallel
-      const childProfiles = await Promise.all(childIds.map(id => getUserProfile(id)));
-      const progResults   = await Promise.all(childIds.map(id => getChildProgress(id)));
-      const achResults    = await Promise.all(childIds.map(id => getAchievements(id)));
+      // Fetch each child's progress + achievements in parallel
+      const progResults = await Promise.all(childIds.map(id => getChildProgress(id)));
+      const achResults  = await Promise.all(childIds.map(id => getAchievements(id)));
 
       setChildren(childProfiles);
       const pm = {};
@@ -141,7 +134,7 @@ export default function ParentDashboardScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: insets.bottom + 90 }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: TAB_BAR_TOTAL_HEIGHT + insets.bottom }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.aiCyan} />}
       >

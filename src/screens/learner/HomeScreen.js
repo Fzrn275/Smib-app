@@ -288,31 +288,42 @@ export default function HomeScreen({ navigation }) {
         }
       >
         {/* ── HEADER ─────────────────────────────────────────────── */}
-        <Animated.View style={[s(0), { paddingTop: insets.top + SPACING.md }]}>
-          <View style={styles.header}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.logoText}>S-MIB</Text>
-              <Text style={TYPE.caption}>Sarawak Maker-In-A-Box</Text>
-            </View>
-            <View style={styles.headerRight}>
-              <TouchableOpacity
-                style={styles.bellBtn}
-                onPress={() => navigation.navigate(SCREENS.NOTIFICATIONS)}
-              >
-                <Ionicons name="notifications-outline" size={24} color={COLORS.textPrimary} />
-                {unread > 0 && (
-                  <View style={styles.bellBadge}>
-                    <Text style={styles.bellBadgeText}>{unread > 9 ? '9+' : unread}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {(user?.name ?? 'M')[0].toUpperCase()}
-                </Text>
+        <Animated.View style={s(0)}>
+          <LinearGradient
+            {...GRADIENTS.header}
+            style={{
+              borderBottomLeftRadius:  36,
+              borderBottomRightRadius: 36,
+              paddingTop:    insets.top + SPACING.md,
+              paddingBottom: SPACING.lg,
+              marginBottom:  SPACING.md,
+            }}
+          >
+            <View style={styles.header}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.logoText}>S-MIB</Text>
+                <Text style={TYPE.caption}>Sarawak Maker-In-A-Box</Text>
+              </View>
+              <View style={styles.headerRight}>
+                <TouchableOpacity
+                  style={styles.bellBtn}
+                  onPress={() => navigation.navigate(SCREENS.NOTIFICATIONS)}
+                >
+                  <Ionicons name="notifications-outline" size={24} color={COLORS.textPrimary} />
+                  {unread > 0 && (
+                    <View style={styles.bellBadge}>
+                      <Text style={styles.bellBadgeText}>{unread > 9 ? '9+' : unread}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {(user?.name ?? 'M')[0].toUpperCase()}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
+          </LinearGradient>
         </Animated.View>
 
         {/* ── GREETING ───────────────────────────────────────────── */}

@@ -9,10 +9,9 @@ import {
 import { useSafeAreaInsets }  from 'react-native-safe-area-context';
 import { Ionicons }           from '@expo/vector-icons';
 
-import { useAuth }                      from '../../context/AuthContext';
-import { supabase }                     from '../../services/supabaseClient';
-import { getCreatorProjects }           from '../../services/projectService';
-import { getProgressSummary }           from '../../services/progressService';
+import { useAuth }                        from '../../context/AuthContext';
+import { SCREENS, TAB_BAR_TOTAL_HEIGHT } from '../../navigation/navConstants';
+import { getCreatorStats }               from '../../services/projectService';
 import Creator         from '../../models/Creator';
 import VerifiedCreator from '../../models/VerifiedCreator';
 import {
@@ -39,7 +38,6 @@ export default function CreatorDashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { user }  = useAuth();
 
-  const [creatorId,   setCreatorId]   = useState(null);
   const [projects,    setProjects]    = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [refreshing,  setRefreshing]  = useState(false);
@@ -49,62 +47,29 @@ export default function CreatorDashboardScreen({ navigation }) {
 
   const [creatorModel, setCreatorModel] = useState(null);
 
-  async function fetchCreatorRow() {
-    const { data, error: e } = await supabase
-      .from('creators')
-      .select('id, organisation, focus_area, bio, is_verified, verified_at')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    if (e) throw new Error('Could not load creator profile.');
-    if (!data) throw new Error('Creator profile not found. Please sign out and back in.');
-    // Build Creator or VerifiedCreator model (inheritance)
-    const model = data.is_verified
-      ? new VerifiedCreator(user.id, user.name, user.email, user.role, user.avatar_url, data.organisation ?? '', data.focus_area ?? '', data.bio ?? '', data.verified_at)
-      : new Creator(user.id, user.name, user.email, user.role, user.avatar_url, data.organisation ?? '', data.focus_area ?? '', data.bio ?? '');
-    setCreatorModel(model);
-    return data.id;
-  }
-
   const load = useCallback(async () => {
     if (!user) return;
     try {
       setError('');
-      const cId = creatorId ?? await fetchCreatorRow();
-      if (!creatorId) setCreatorId(cId);
+      const result = await getCreatorStats(user.id);
 
-      const projs = await getCreatorProjects(cId);
-      setProjects(projs);
-
-      // Compute stats
-      const published = projs.filter(p => p.status === 'published').length;
-      const draft     = projs.filter(p => p.status === 'draft').length;
-
-      // Count total enrolled students across published projects
-      let totalEnrolled = 0;
-      let completionSum = 0;
-      let completionCount = 0;
-      for (const proj of projs.filter(p => p.status === 'published')) {
-        const { count } = await supabase
-          .from('progress')
-          .select('*', { count: 'exact', head: true })
-          .eq('project_id', proj.id);
-        totalEnrolled += count ?? 0;
-
-        const { data: pRows } = await supabase
-          .from('progress')
-          .select('progress_pct')
-          .eq('project_id', proj.id);
-        if (pRows?.length) {
-          completionSum   += pRows.reduce((s, r) => s + (r.progress_pct ?? 0), 0);
-          completionCount += pRows.length;
-        }
+      const { creatorRow } = result;
+      if (!creatorRow) {
+        setError('Creator profile not found. Please sign out and sign back in.');
+        setLoading(false);
+        return;
       }
+      const model = creatorRow.is_verified
+        ? new VerifiedCreator(user.id, user.name, user.email, user.role, user.avatar_url, creatorRow.organisation ?? '', creatorRow.focus_area ?? '', creatorRow.bio ?? '', creatorRow.verified_at)
+        : new Creator(user.id, user.name, user.email, user.role, user.avatar_url, creatorRow.organisation ?? '', creatorRow.focus_area ?? '', creatorRow.bio ?? '');
+      setCreatorModel(model);
 
+      setProjects(result.projects);
       setStats({
-        published,
-        draft,
-        students: totalEnrolled,
-        avgCompletion: completionCount ? Math.round(completionSum / completionCount) : 0,
+        published:     result.published,
+        draft:         result.draft,
+        students:      result.students,
+        avgCompletion: result.avgCompletion,
       });
     } catch (err) {
       setError(err.message || 'Failed to load dashboard.');
@@ -112,7 +77,7 @@ export default function CreatorDashboardScreen({ navigation }) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, creatorId]);
+  }, [user]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -131,7 +96,7 @@ export default function CreatorDashboardScreen({ navigation }) {
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: insets.bottom + 90 }]}
+      contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: TAB_BAR_TOTAL_HEIGHT + insets.bottom }]}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.aiCyan} />}
     >
@@ -175,7 +140,7 @@ export default function CreatorDashboardScreen({ navigation }) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={TYPE.h3}>My Projects</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('MyProjects')}>
+          <TouchableOpacity onPress={() => navigation.navigate(SCREENS.MY_PROJECTS)}>
             <Text style={styles.seeAll}>See All →</Text>
           </TouchableOpacity>
         </View>
@@ -189,7 +154,7 @@ export default function CreatorDashboardScreen({ navigation }) {
             <TouchableOpacity
               key={proj.id}
               style={styles.projectRow}
-              onPress={() => navigation.navigate('CreatorProjectDetail', { projectId: proj.id })}
+              onPress={() => navigation.navigate(SCREENS.CREATOR_PROJ_DETAIL, { projectId: proj.id })}
               activeOpacity={0.8}
             >
               <View style={[styles.projectStatusBar, { backgroundColor: STATUS_COLOR[proj.status] ?? COLORS.textCaption }]} />
@@ -211,14 +176,14 @@ export default function CreatorDashboardScreen({ navigation }) {
       <View style={styles.actionsRow}>
         <TouchableOpacity
           style={[styles.actionBtn, { backgroundColor: BUTTONS.variants.primary.backgroundColor }]}
-          onPress={() => navigation.navigate('NewProject')}
+          onPress={() => navigation.navigate(SCREENS.NEW_PROJECT)}
         >
           <Ionicons name="add-circle-outline" size={18} color={COLORS.white} />
           <Text style={styles.actionBtnText}>New Project</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' }]}
-          onPress={() => navigation.navigate('Analytics')}
+          onPress={() => navigation.navigate(SCREENS.ANALYTICS)}
         >
           <Ionicons name="bar-chart-outline" size={18} color={COLORS.aiCyan} />
           <Text style={[styles.actionBtnText, { color: COLORS.aiCyan }]}>Analytics</Text>

@@ -11,9 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient }    from 'expo-linear-gradient';
 import { Ionicons }          from '@expo/vector-icons';
 
-import { useAuth }          from '../../context/AuthContext';
-import { supabase }         from '../../services/supabaseClient';
-import { createProject }    from '../../services/projectService';
+import { useAuth }                                from '../../context/AuthContext';
+import { createProject, getCreatorRowByUserId }  from '../../services/projectService';
 import {
   COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, BUTTONS, GRADIENTS, SPRING,
 } from '../../theme';
@@ -76,6 +75,7 @@ export default function NewProjectScreen({ navigation }) {
   const [duration,    setDuration]    = useState('');
   const [description, setDescription] = useState('');
   const [tags,        setTags]        = useState('');
+  const [youtubeUrl,  setYoutubeUrl]  = useState('');
   const [loading,     setLoading]     = useState(false);
   const [errors,      setErrors]      = useState({});
 
@@ -99,10 +99,7 @@ export default function NewProjectScreen({ navigation }) {
     setErrors({});
     setLoading(true);
     try {
-      const { data: creatorRow, error: cErr } = await supabase
-        .from('creators').select('id').eq('user_id', user.id).maybeSingle();
-      if (cErr) throw new Error('Could not load creator profile.');
-      if (!creatorRow) throw new Error('Creator profile not found. Please sign out and back in.');
+      const creatorRow = await getCreatorRowByUserId(user.id);
 
       const project = await createProject(creatorRow.id, {
         title:              title.trim(),
@@ -112,6 +109,7 @@ export default function NewProjectScreen({ navigation }) {
         estimated_duration: duration ? parseInt(duration, 10) : null,
         description:        description.trim() || null,
         tags:               tags.split(',').map(t => t.trim()).filter(Boolean),
+        youtube_url:        youtubeUrl.trim() || null,
         status:             'draft',
       });
       navigation.navigate('EditProject', { projectId: project.id });
@@ -225,6 +223,21 @@ export default function NewProjectScreen({ navigation }) {
                   onChangeText={setTags}
                   placeholder="solar, renewable, DIY"
                   placeholderTextColor={COLORS.textLabel}
+                />
+              </View>
+            </Field>
+
+            <Field label="YouTube Tutorial URL (optional)">
+              <View style={styles.inputWrap}>
+                <Ionicons name="logo-youtube" size={16} color={COLORS.textCaption} style={{ marginRight: SPACING.sm }} />
+                <TextInput
+                  style={styles.input}
+                  value={youtubeUrl}
+                  onChangeText={setYoutubeUrl}
+                  placeholder="https://youtube.com/watch?v=..."
+                  placeholderTextColor={COLORS.textLabel}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
               </View>
             </Field>

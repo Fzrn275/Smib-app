@@ -13,8 +13,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Animated, ActivityIndicator,
-  Modal, Image, Alert,
+  Modal, Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets }  from 'react-native-safe-area-context';
 import { LinearGradient }     from 'expo-linear-gradient';
 import { Ionicons }           from '@expo/vector-icons';
@@ -26,11 +27,11 @@ import {
   COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, SPRING,
 } from '../../theme';
 import { getStepById, getProjectMaterials } from '../../services/projectService';
-import { completeStep, queueStepCompletion } from '../../services/progressService';
+import { completeStep, queueStepCompletion, syncOfflineQueue, uploadStepPhoto } from '../../services/progressService';
+import { checkAndAwardAchievements } from '../../services/achievementService';
 import Progress  from '../../models/Progress';
 import Step      from '../../models/Step';
 import Material  from '../../models/Material';
-import { supabase } from '../../services/supabaseClient';
 
 // ─── SEGMENT PROGRESS BAR ────────────────────────────────────────────────────
 
@@ -218,21 +219,10 @@ export default function StepDetailScreen({ navigation, route }) {
   async function uploadPhoto(uri) {
     try {
       const ext      = uri.split('.').pop() ?? 'jpg';
-      const filename = `${user.id}_${stepId}_${Date.now()}.${ext}`;
+      const filename = `${user?.id}_${stepId}_${Date.now()}.${ext}`;
       const response = await fetch(uri);
       const blob     = await response.blob();
-
-      const { error: upErr } = await supabase.storage
-        .from('proof-photos')
-        .upload(filename, blob, { contentType: `image/${ext}` });
-
-      if (upErr) throw upErr;
-
-      const { data: urlData } = supabase.storage
-        .from('proof-photos')
-        .getPublicUrl(filename);
-
-      return urlData?.publicUrl ?? null;
+      return await uploadStepPhoto(filename, blob, ext);
     } catch {
       return null; // Photo upload is non-blocking — step still completes
     }
@@ -245,6 +235,9 @@ export default function StepDetailScreen({ navigation, route }) {
     setError(null);
 
     try {
+      // Sync any previously queued offline steps first
+      syncOfflineQueue().catch(() => {});
+
       // OOP: Progress.completeStep() validates locally (prevents double-award) before DB write
       const progressModel = new Progress(user.id, projectId, completed, totalSteps);
       progressModel.completeStep(stepNumber, totalSteps);
@@ -268,6 +261,17 @@ export default function StepDetailScreen({ navigation, route }) {
       setCompleted(result.completedSteps);
       setAwardedXp(50);
       setXpVisible(true);
+
+      // Check and award badges / certificates — non-fatal
+      try {
+        await checkAndAwardAchievements(user.id, projectId, {
+          isComplete:            result.isComplete,
+          completedProjectCount: result.isComplete ? 1 : 0,
+          streakCount:           0, // streakService handles this separately
+        });
+      } catch {
+        // Achievement failure must never block the step completion UX
+      }
 
       // Refresh auth context so XP/level reflect immediately on other screens
       if (refreshUser) await refreshUser();
@@ -396,7 +400,7 @@ export default function StepDetailScreen({ navigation, route }) {
               <Image
                 source={{ uri: step.image_ref }}
                 style={styles.stepImage}
-                resizeMode="cover"
+                contentFit="cover"
               />
             </View>
           ) : null}
@@ -429,7 +433,7 @@ export default function StepDetailScreen({ navigation, route }) {
 
             {photoUri ? (
               <View style={styles.photoPreview}>
-                <Image source={{ uri: photoUri }} style={styles.photoImg} resizeMode="cover" />
+                <Image source={{ uri: photoUri }} style={styles.photoImg} contentFit="cover" />
                 <TouchableOpacity
                   style={styles.removePhoto}
                   onPress={() => setPhotoUri(null)}

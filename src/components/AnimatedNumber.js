@@ -5,7 +5,7 @@
 //          and ProfileScreen to give a Web3-style "live" feel.
 // ============================================================
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Animated, Text } from 'react-native';
 
 export default function AnimatedNumber({ value, style, duration = 500 }) {

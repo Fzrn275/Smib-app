@@ -17,6 +17,28 @@ import { supabase } from './supabaseClient';
 const XP_PER_STEP       = 50;
 const OFFLINE_QUEUE_KEY = 'smib_offline_queue';
 
+// ─── STORAGE ─────────────────────────────────────────────────────────────────
+
+/**
+ * Uploads a step proof photo to the proof-photos storage bucket.
+ * Returns the public URL, or null if the upload fails (non-blocking).
+ */
+export async function uploadStepPhoto(filename, blob, ext) {
+  try {
+    const { error: upErr } = await supabase.storage
+      .from('proof-photos')
+      .upload(filename, blob, { contentType: `image/${ext}` });
+    if (upErr) throw upErr;
+
+    const { data: urlData } = supabase.storage
+      .from('proof-photos')
+      .getPublicUrl(filename);
+    return urlData?.publicUrl ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── OFFLINE QUEUE HELPERS ───────────────────────────────────────────────────
 
 async function readQueue() {
@@ -244,15 +266,13 @@ export async function completeStep({
     .eq('project_id', projectId);
   if (progError) throw new Error(progError.message || 'Could not update progress.');
 
-  // ── P3.3: Award XP ───────────────────────────────────────────────────────
-  const newXp    = currentXp + XP_PER_STEP;
-  const newLevel = Math.min(Math.floor(newXp / 1000) + 1, 10);
-
-  const { error: xpError } = await supabase
-    .from('users')
-    .update({ xp: newXp, level: newLevel, updated_at: new Date().toISOString() })
-    .eq('id', studentId);
+  // ── P3.3: Award XP atomically (prevents race condition) ──────────────────────
+  const { data: xpResult, error: xpError } = await supabase
+    .rpc('increment_xp', { p_user_id: studentId, p_xp_amount: XP_PER_STEP });
   if (xpError) throw new Error(xpError.message || 'Could not award XP.');
+
+  const newXp    = xpResult?.[0]?.new_xp    ?? (currentXp + XP_PER_STEP);
+  const newLevel = xpResult?.[0]?.new_level ?? Math.min(Math.floor(newXp / 1000) + 1, 10);
 
   // ── P3.5: Create XP notification ─────────────────────────────────────────
   // Non-fatal — notification failure should not block the step completion UX

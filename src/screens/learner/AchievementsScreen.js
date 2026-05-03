@@ -4,18 +4,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Animated, ActivityIndicator,
+  StyleSheet, Animated, ActivityIndicator, Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons }          from '@expo/vector-icons';
 
 import { useAuth }                       from '../../context/AuthContext';
 import { SCREENS, TAB_BAR_TOTAL_HEIGHT } from '../../navigation/navConstants';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
-  COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, SPRING, BADGE_TIERS,
+  COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, SPRING, BADGE_TIERS, GRADIENTS,
 } from '../../theme';
 import { getAchievements, getCertificates } from '../../services/achievementService';
 import Achievement from '../../models/Achievement';
+
+const SCREEN_W = Dimensions.get('window').width;
+const CARD_W   = (SCREEN_W - SPACING.lg * 2 - SPACING.md) / 2;
 
 // ─── BADGE DEFINITIONS ───────────────────────────────────────────────────────
 // All possible badges in the system. Earned ones are matched by trigger_type.
@@ -76,7 +80,7 @@ function BadgeCard({ badge, earned }) {
 
 const bStyles = StyleSheet.create({
   card: {
-    width:             '47%',
+    width:             CARD_W,
     borderRadius:      RADIUS.lg,
     borderTopWidth:    1,
     borderLeftWidth:   1,
@@ -212,15 +216,17 @@ export default function AchievementsScreen({ navigation }) {
 
   return (
     <Animated.View style={[{ flex: 1 }, { opacity: fadeA }]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: TAB_BAR_TOTAL_HEIGHT + SPACING.xxl,
-          paddingTop:    insets.top + SPACING.sm,
-          paddingHorizontal: SPACING.lg,
+      {/* ── HEADER ─────────────────────────────────────────────── */}
+      <LinearGradient
+        {...GRADIENTS.header}
+        style={{
+          paddingTop:              insets.top + SPACING.sm,
+          borderBottomLeftRadius:  36,
+          borderBottomRightRadius: 36,
+          paddingBottom:           SPACING.lg,
+          marginBottom:            SPACING.md,
         }}
       >
-        {/* ── HEADER ─────────────────────────────────────────────── */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={24} color={COLORS.textPrimary} />
@@ -230,7 +236,15 @@ export default function AchievementsScreen({ navigation }) {
             <Text style={styles.countText}>{badges.length} earned</Text>
           </View>
         </View>
+      </LinearGradient>
 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom:     TAB_BAR_TOTAL_HEIGHT + SPACING.xxl,
+          paddingHorizontal: SPACING.lg,
+        }}
+      >
         {/* ── BADGES ─────────────────────────────────────────────── */}
         <Text style={styles.sectionLabel}>Badges</Text>
         <View style={styles.badgeGrid}>
@@ -269,16 +283,17 @@ export default function AchievementsScreen({ navigation }) {
   );
 }
 
+
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   header: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    marginBottom:   SPACING.xl,
-    gap:            SPACING.md,
+    flexDirection:     'row',
+    alignItems:        'center',
+    paddingHorizontal: SPACING.lg,
+    gap:               SPACING.md,
   },
   backBtn: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -308,11 +323,11 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   badgeGrid: {
-    flexDirection:   'row',
-    flexWrap:        'wrap',
-    gap:             0,
-    justifyContent:  'space-between',
-    marginBottom:    SPACING.sm,
+    flexDirection:     'row',
+    flexWrap:          'wrap',
+    gap:               SPACING.md,
+    marginBottom:      SPACING.sm,
+    paddingHorizontal: SPACING.lg,
   },
   emptyCard: {
     borderRadius: RADIUS.lg,

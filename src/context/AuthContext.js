@@ -24,16 +24,27 @@ export function AuthProvider({ children }) {
   // Supabase persists the JWT in AsyncStorage automatically.
   // ----------------------------------------------------------
   useEffect(() => {
-    // Restore session from storage
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Restore session from storage.
+    // If the stored refresh token is stale/expired, getSession returns an error —
+    // sign out silently so the user lands on the login screen cleanly.
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        supabase.auth.signOut().catch(() => {});
+        setLoading(false);
+        return;
+      }
       setSession(session);
       if (session) fetchUserProfile(session.user.id);
       else setLoading(false);
     });
 
-    // Listen for sign-in / sign-out events
+    // Listen for sign-in / sign-out / token refresh events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        if (_event === 'TOKEN_REFRESH_FAILED') {
+          supabase.auth.signOut().catch(() => {});
+          return;
+        }
         setSession(session);
         if (session) {
           fetchUserProfile(session.user.id);
@@ -122,7 +133,7 @@ export function AuthProvider({ children }) {
 
     // Convenience role checks used by RootNavigator and screens
     isLearner:  role === 'junior_learner' || role === 'senior_learner',
-    isCreator:  role === 'creator' || role === 'verified_creator' || role === 'content_mentor',
+    isCreator:  role === 'creator' || role === 'verified_creator',
     isParent:   role === 'parent',
     // Registration flow — keep AuthFlow mounted while showing success screen
     justRegistered,

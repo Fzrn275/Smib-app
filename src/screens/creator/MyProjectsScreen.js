@@ -9,9 +9,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons }          from '@expo/vector-icons';
 
-import { useAuth }            from '../../context/AuthContext';
-import { supabase }           from '../../services/supabaseClient';
-import { getCreatorProjects } from '../../services/projectService';
+import { useAuth }                                      from '../../context/AuthContext';
+import { SCREENS, TAB_BAR_TOTAL_HEIGHT }               from '../../navigation/navConstants';
+import { getCreatorProjects, getCreatorRowByUserId }   from '../../services/projectService';
 import {
   COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, BUTTONS,
 } from '../../theme';
@@ -38,11 +38,13 @@ export default function MyProjectsScreen({ navigation }) {
       setError('');
       let cId = creatorId;
       if (!cId) {
-        const { data, error: e } = await supabase
-          .from('creators').select('id').eq('user_id', user.id).maybeSingle();
-        if (e) throw new Error('Could not load creator profile.');
-        if (!data) throw new Error('Creator profile not found. Please sign out and back in.');
-        cId = data.id;
+        const creatorRow = await getCreatorRowByUserId(user.id);
+        if (!creatorRow) {
+          setError('Creator profile not found. Please sign out and sign back in.');
+          setLoading(false);
+          return;
+        }
+        cId = creatorRow.id;
         setCreatorId(cId);
       }
       const data = await getCreatorProjects(cId);
@@ -71,7 +73,7 @@ export default function MyProjectsScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: insets.bottom + 90 }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: TAB_BAR_TOTAL_HEIGHT + insets.bottom }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.aiCyan} />}
       >
@@ -80,7 +82,7 @@ export default function MyProjectsScreen({ navigation }) {
           <Text style={TYPE.h1}>My Projects</Text>
           <TouchableOpacity
             style={styles.addBtn}
-            onPress={() => navigation.navigate('NewProject')}
+            onPress={() => navigation.navigate(SCREENS.NEW_PROJECT)}
           >
             <Ionicons name="add" size={22} color={COLORS.white} />
           </TouchableOpacity>
@@ -133,7 +135,7 @@ export default function MyProjectsScreen({ navigation }) {
             <TouchableOpacity
               key={proj.id}
               style={styles.projectCard}
-              onPress={() => navigation.navigate('CreatorProjectDetail', { projectId: proj.id })}
+              onPress={() => navigation.navigate(SCREENS.CREATOR_PROJ_DETAIL, { projectId: proj.id })}
               activeOpacity={0.8}
             >
               {/* Category colour strip */}

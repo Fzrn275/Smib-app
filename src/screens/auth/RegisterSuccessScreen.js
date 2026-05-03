@@ -14,12 +14,11 @@ import {
 } from '../../theme';
 
 const ROLE_LABELS = {
-  junior_learner: 'Learner',
-  senior_learner: 'Learner',
-  creator:        'Creator',
+  junior_learner:   'Learner',
+  senior_learner:   'Learner',
+  creator:          'Creator',
   verified_creator: 'Verified Creator',
-  content_mentor: 'Mentor',
-  parent:         'Parent',
+  parent:           'Parent',
 };
 
 export default function RegisterSuccessScreen({ route }) {

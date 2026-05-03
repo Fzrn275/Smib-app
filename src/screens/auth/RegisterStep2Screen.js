@@ -28,7 +28,6 @@ const ROLE_LABELS = {
   junior_learner: 'Learner',
   creator:        'Creator',
   parent:         'Parent',
-  content_mentor: 'Mentor',
 };
 
 function GradePicker({ value, onChange }) {
@@ -80,16 +79,21 @@ export default function RegisterStep2Screen({ navigation, route }) {
   const { setJustRegistered, fetchUserProfile } = useAuth();
   const role = route?.params?.role ?? 'junior_learner';
 
-  const [name,        setName]        = useState('');
-  const [email,       setEmail]       = useState('');
-  const [grade,       setGrade]       = useState('');
-  const [school,      setSchool]      = useState('');
-  const [password,    setPassword]    = useState('');
-  const [confirm,     setConfirm]     = useState('');
-  const [terms,       setTerms]       = useState(false);
-  const [showPass,    setShowPass]    = useState(false);
-  const [showConf,    setShowConf]    = useState(false);
-  const [loading,     setLoading]     = useState(false);
+  const [name,         setName]         = useState('');
+  const [email,        setEmail]        = useState('');
+  const [grade,        setGrade]        = useState('');
+  const [school,       setSchool]       = useState('');
+  const [organisation, setOrganisation] = useState('');
+  const [focusArea,    setFocusArea]    = useState('');
+  const [password,     setPassword]     = useState('');
+  const [confirm,      setConfirm]      = useState('');
+  const [terms,        setTerms]        = useState(false);
+  const [showPass,     setShowPass]     = useState(false);
+  const [showConf,     setShowConf]     = useState(false);
+  const [loading,      setLoading]      = useState(false);
+
+  const isLearner = role === 'junior_learner' || role === 'senior_learner';
+  const isCreator = role === 'creator';
 
   const [errors, setErrors] = useState({});
 
@@ -119,13 +123,20 @@ export default function RegisterStep2Screen({ navigation, route }) {
     setJustRegistered(true);
     setLoading(true);
     try {
+      const SENIOR_GRADES = ['Form 1', 'Form 2', 'Form 3', 'Form 4', 'Form 5', 'Form 6'];
+      const effectiveRole = (role === 'junior_learner' && SENIOR_GRADES.includes(grade))
+        ? 'senior_learner'
+        : role;
+
       const result = await authService.signUp({
-        name:       name.trim(),
-        email:      email.trim(),
+        name:         name.trim(),
+        email:        email.trim(),
         password,
-        role,
-        gradeLevel: grade || null,
-        schoolName: school.trim() || null,
+        role:         effectiveRole,
+        gradeLevel:   isLearner ? (grade || null) : null,
+        schoolName:   isLearner ? (school.trim() || null) : null,
+        organisation: isCreator ? (organisation.trim() || null) : null,
+        focusArea:    isCreator ? (focusArea.trim() || null) : null,
       });
       // onAuthStateChange may fire before the users table row is inserted.
       // Re-fetch now that all DB writes are complete so user/role are set
@@ -148,6 +159,7 @@ export default function RegisterStep2Screen({ navigation, route }) {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
         <ScrollView
           contentContainerStyle={[
@@ -215,22 +227,56 @@ export default function RegisterStep2Screen({ navigation, route }) {
               </View>
             </Field>
 
-            <Field label="Grade / Form Level">
-              <GradePicker value={grade} onChange={setGrade} />
-            </Field>
+            {isLearner && (
+              <Field label="Grade / Form Level">
+                <GradePicker value={grade} onChange={setGrade} />
+              </Field>
+            )}
 
-            <Field label="School Name">
-              <View style={styles.inputWrap}>
-                <Ionicons name="business-outline" size={16} color={COLORS.textCaption} style={{ marginRight: SPACING.sm }} />
-                <TextInput
-                  style={styles.input}
-                  value={school}
-                  onChangeText={setSchool}
-                  placeholder="Your school name (optional)"
-                  placeholderTextColor={COLORS.textLabel}
-                />
-              </View>
-            </Field>
+            {isLearner && (
+              <Field label="School Name">
+                <View style={styles.inputWrap}>
+                  <Ionicons name="business-outline" size={16} color={COLORS.textCaption} style={{ marginRight: SPACING.sm }} />
+                  <TextInput
+                    style={styles.input}
+                    value={school}
+                    onChangeText={setSchool}
+                    placeholder="Your school name (optional)"
+                    placeholderTextColor={COLORS.textLabel}
+                  />
+                </View>
+              </Field>
+            )}
+
+            {isCreator && (
+              <Field label="Organisation (optional)">
+                <View style={styles.inputWrap}>
+                  <Ionicons name="business-outline" size={16} color={COLORS.textCaption} style={{ marginRight: SPACING.sm }} />
+                  <TextInput
+                    style={styles.input}
+                    value={organisation}
+                    onChangeText={setOrganisation}
+                    placeholder="Your company or school name"
+                    placeholderTextColor={COLORS.textLabel}
+                  />
+                </View>
+              </Field>
+            )}
+
+            {isCreator && (
+              <Field label="Focus Area (optional)">
+                <View style={styles.inputWrap}>
+                  <Ionicons name="compass-outline" size={16} color={COLORS.textCaption} style={{ marginRight: SPACING.sm }} />
+                  <TextInput
+                    style={styles.input}
+                    value={focusArea}
+                    onChangeText={setFocusArea}
+                    placeholder="e.g. Electronics, Agriculture"
+                    placeholderTextColor={COLORS.textLabel}
+                  />
+                </View>
+              </Field>
+            )}
 
             <Field label="Password *" error={errors.password}>
               <View style={[styles.inputWrap, errors.password && styles.inputError]}>

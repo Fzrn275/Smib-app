@@ -30,8 +30,10 @@ export const SCREENS = {
   CHILD_PROGRESS:   'ChildProgress',
   ACTIVITY_FEED:    'ActivityFeed',
   PARENT_PROFILE:   'ParentProfile',
+  // Shared
+  PRIVACY_SECURITY: 'PrivacySecurity',
 };
 
 // Height of the custom tab bar (without safe-area insets).
 // Screens add insets.bottom on top of this for their scroll padding.
-export const TAB_BAR_TOTAL_HEIGHT = 68;
+export const TAB_BAR_TOTAL_HEIGHT = 82;

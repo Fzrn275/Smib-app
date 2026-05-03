@@ -45,8 +45,9 @@ export async function initStreak(studentId) {
         last_active_date: today,
       })
       .select()
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!data) throw new Error('Could not initialise streak.');
     return data;
   } catch (err) {
     throw new Error(err.message || 'Could not initialise streak.');
@@ -93,8 +94,9 @@ export async function updateStreak(studentId) {
       })
       .eq('student_id', studentId)
       .select()
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!data) throw new Error('Could not update streak.');
 
     // Notify the student if their streak was broken
     if (!wasContinuous && streak.current_streak > 1) {

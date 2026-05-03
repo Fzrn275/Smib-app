@@ -48,7 +48,7 @@ function AuthFlow() {
 // Separate inner component so useAuth() can be called inside AuthProvider.
 
 function NavigationRoot() {
-  const { session, loading, justRegistered } = useAuth();
+  const { session, user, loading, justRegistered } = useAuth();
 
   if (loading) {
     return (
@@ -59,7 +59,7 @@ function NavigationRoot() {
   }
 
   // Keep AuthFlow alive while showing RegisterSuccessScreen after registration
-  if (session && !justRegistered) return <AppNavigator />;
+  if (session && user && !justRegistered) return <AppNavigator />;
   return <AuthFlow />;
 }
 

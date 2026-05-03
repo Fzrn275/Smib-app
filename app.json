@@ -12,6 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#064E3B"
     },
+    "scheme": "smib",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.smib.app"
@@ -22,13 +23,29 @@
         "backgroundColor": "#064E3B"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.smib.app"
+      "package": "com.smib.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "smib"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

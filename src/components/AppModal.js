@@ -1,22 +1,6 @@
 // ============================================================
 // FILE: src/components/AppModal.js
 // PURPOSE: Reusable bottom-sheet modal used app-wide.
-//          Replaces all plain Alert.alert() calls.
-//
-// DESIGN: Clean white slide-up sheet with spring entrance,
-//         animated backdrop, and the app's design system.
-//
-// USAGE:
-//   const [modal, setModal] = useState(null);
-//
-//   <AppModal
-//     visible={!!modal}
-//     onClose={() => setModal(null)}
-//     emoji="🎉"
-//     title="Well done!"
-//     message="You completed a step."
-//     action={{ label: 'Keep going', onPress: () => {} }}
-//   />
 // ============================================================
 
 import { useState, useRef, useEffect } from 'react';
@@ -29,7 +13,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { Colors, Spacing, Radius, Shadow } from '../theme';
+import { COLORS, SPACING, RADIUS, SHADOWS } from '../theme';
 
 export default function AppModal({ visible, onClose, emoji, title, message, action }) {
   const [showing, setShowing]  = useState(false);
@@ -107,99 +91,84 @@ export default function AppModal({ visible, onClose, emoji, title, message, acti
   );
 }
 
-// ----------------------------------------------------------
-// STYLES
-// ----------------------------------------------------------
 const styles = StyleSheet.create({
-
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.50)',
+    backgroundColor: COLORS.overlay50,
   },
-
   sheet: {
     position:             'absolute',
     bottom:               0,
     left:                 0,
     right:                0,
-    backgroundColor:      Colors.card,
+    backgroundColor:      COLORS.cardDark,
     borderTopLeftRadius:  28,
     borderTopRightRadius: 28,
-    paddingHorizontal:    Spacing.lg,
-    paddingTop:           Spacing.sm,
+    paddingHorizontal:    SPACING.lg,
+    paddingTop:           SPACING.sm,
     paddingBottom:        40,
     alignItems:           'center',
-    ...Shadow.strong,
+    ...SHADOWS.lg,
   },
-
   handle: {
     width:           44,
     height:          4,
-    borderRadius:    Radius.full,
-    backgroundColor: Colors.border,
-    marginBottom:    Spacing.lg,
+    borderRadius:    RADIUS.pill,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginBottom:    SPACING.lg,
   },
-
   emoji: {
     fontSize:     44,
-    marginBottom: Spacing.sm,
+    marginBottom: SPACING.sm,
   },
-
   title: {
     fontSize:      18,
     fontWeight:    '800',
-    color:         Colors.textPrimary,
+    color:         COLORS.textPrimary,
     textAlign:     'center',
-    marginBottom:  Spacing.sm,
+    marginBottom:  SPACING.sm,
   },
-
   message: {
     fontSize:      14,
-    color:         Colors.textMuted,
+    color:         COLORS.textCaption,
     textAlign:     'center',
     lineHeight:    21,
-    marginBottom:  Spacing.lg,
+    marginBottom:  SPACING.lg,
   },
-
   actionBtn: {
     width:            '100%',
-    backgroundColor:  Colors.teal,
-    borderRadius:     Radius.lg,
+    backgroundColor:  COLORS.riverTeal,
+    borderRadius:     RADIUS.lg,
     paddingVertical:  14,
     alignItems:       'center',
-    marginBottom:     Spacing.sm,
-    ...Shadow.card,
+    marginBottom:     SPACING.sm,
+    ...SHADOWS.md,
   },
-
   actionBtnDestructive: {
-    backgroundColor: '#fff0f0',
+    backgroundColor: 'rgba(239,68,68,0.12)',
     borderWidth:     1,
-    borderColor:     '#fecaca',
+    borderColor:     'rgba(239,68,68,0.30)',
     shadowOpacity:   0,
     elevation:       0,
   },
-
   actionText: {
     fontSize:   15,
     fontWeight: '800',
-    color:      '#ffffff',
+    color:      COLORS.white,
   },
-
   actionTextDestructive: {
-    color: Colors.red,
+    color: COLORS.error,
   },
-
   closeBtn: {
     width:           '100%',
-    backgroundColor: Colors.background,
-    borderRadius:    Radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius:    RADIUS.lg,
     paddingVertical: 14,
     alignItems:      'center',
   },
-
   closeText: {
     fontSize:   14,
     fontWeight: '600',
-    color:      Colors.textMuted,
+    color:      COLORS.textCaption,
   },
 });

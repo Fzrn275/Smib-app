@@ -233,18 +233,28 @@ export default function ProgressScreen({ navigation }) {
         }}
       >
         {/* ── HEADER ─────────────────────────────────────────────── */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>My Progress</Text>
-            <Text style={TYPE.caption}>Level {currentLevel} · {rankTitle}</Text>
-          </View>
-          {streakDays > 0 && (
-            <View style={styles.streakBadge}>
-              <Text style={{ fontSize: 16 }}>🔥</Text>
-              <Text style={styles.streakText}>{streakDays} day streak</Text>
+        <LinearGradient
+          {...GRADIENTS.header}
+          style={{
+            borderBottomLeftRadius:  36,
+            borderBottomRightRadius: 36,
+            paddingBottom: SPACING.lg,
+            marginBottom:  SPACING.md,
+          }}
+        >
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>My Progress</Text>
+              <Text style={TYPE.caption}>Level {currentLevel} · {rankTitle}</Text>
             </View>
-          )}
-        </View>
+            {streakDays > 0 && (
+              <View style={styles.streakBadge}>
+                <Text style={{ fontSize: 16 }}>🔥</Text>
+                <Text style={styles.streakText}>{streakDays} day streak</Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
 
         {/* ── XP BAR ─────────────────────────────────────────────── */}
         <View style={[GLASS.standard, styles.xpCard]}>

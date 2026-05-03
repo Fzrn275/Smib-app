@@ -4,13 +4,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Modal,
+  ActivityIndicator, Modal, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons }          from '@expo/vector-icons';
 
-import { useAuth }      from '../../context/AuthContext';
-import * as authService from '../../services/authService';
+import { useAuth }                        from '../../context/AuthContext';
+import * as authService                   from '../../services/authService';
+import { SCREENS, TAB_BAR_TOTAL_HEIGHT } from '../../navigation/navConstants';
 import {
   COLORS, FONTS, TYPE, SPACING, RADIUS,
 } from '../../theme';
@@ -27,12 +28,33 @@ export default function ParentProfileScreen({ navigation }) {
     try { await authService.signOut(); } catch { setSigningOut(false); setSignOutModal(false); }
   }
 
+  async function handleDeleteAccount() {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all your data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await authService.deleteAccount();
+            } catch (err) {
+              Alert.alert('Error', err.message);
+            }
+          },
+        },
+      ]
+    );
+  }
+
   const initial = (user?.name ?? 'P').charAt(0).toUpperCase();
 
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: insets.bottom + 90 }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: TAB_BAR_TOTAL_HEIGHT + insets.bottom }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Avatar */}
@@ -49,10 +71,10 @@ export default function ParentProfileScreen({ navigation }) {
         {/* Settings list */}
         <View style={styles.settingsList}>
           {[
-            { icon: 'people-outline',       label: 'My Children',    onPress: () => navigation.navigate('ParentDashboard') },
-            { icon: 'pulse-outline',        label: 'Activity Feed',  onPress: () => navigation.navigate('ActivityFeed') },
-            { icon: 'notifications-outline', label: 'Notifications',  onPress: () => {} },
-            { icon: 'shield-outline',       label: 'Privacy & Security', onPress: () => {} },
+            { icon: 'people-outline',        label: 'My Children',        onPress: () => navigation.navigate(SCREENS.PARENT_DASHBOARD) },
+            { icon: 'pulse-outline',         label: 'Activity Feed',      onPress: () => navigation.navigate(SCREENS.ACTIVITY_FEED) },
+            { icon: 'notifications-outline', label: 'Notifications',      onPress: () => {} },
+            { icon: 'shield-outline',        label: 'Privacy & Security', onPress: () => navigation.navigate(SCREENS.PRIVACY_SECURITY) },
           ].map(item => (
             <TouchableOpacity key={item.label} style={styles.settingsRow} onPress={item.onPress} activeOpacity={0.7}>
               <View style={styles.settingsIcon}>
@@ -69,6 +91,14 @@ export default function ParentProfileScreen({ navigation }) {
               <Ionicons name="log-out-outline" size={18} color={COLORS.error} />
             </View>
             <Text style={[styles.settingsLabel, { color: COLORS.error }]}>Sign Out</Text>
+          </TouchableOpacity>
+
+          {/* Delete account */}
+          <TouchableOpacity style={styles.settingsRow} onPress={handleDeleteAccount} activeOpacity={0.7}>
+            <View style={[styles.settingsIcon, { backgroundColor: COLORS.errorBgSubtle }]}>
+              <Ionicons name="trash-outline" size={18} color={COLORS.error} />
+            </View>
+            <Text style={[styles.settingsLabel, { color: COLORS.error }]}>Delete Account</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

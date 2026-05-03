@@ -9,10 +9,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons }          from '@expo/vector-icons';
 
-import { useAuth }                                   from '../../context/AuthContext';
-import { supabase }                                  from '../../services/supabaseClient';
-import { getProjectById, getProjectSteps }           from '../../services/projectService';
-import { getStepCompletionStats, getProgress }       from '../../services/progressService';
+import { useAuth }                                                        from '../../context/AuthContext';
+import { SCREENS, TAB_BAR_TOTAL_HEIGHT }                                 from '../../navigation/navConstants';
+import {
+  getProjectById, getProjectSteps,
+  getProjectEnrolmentCount, getCreatorRowByUserId, deleteProject,
+} from '../../services/projectService';
+import { getStepCompletionStats, getProgress }                           from '../../services/progressService';
 import {
   COLORS, GLASS, FONTS, TYPE, SPACING, RADIUS, BUTTONS,
 } from '../../theme';
@@ -45,11 +48,7 @@ export default function CreatorProjectDetailScreen({ navigation, route }) {
       const stepStats = await getStepCompletionStats(projectId);
       setStats(stepStats);
 
-      const { count } = await supabase
-        .from('progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('project_id', projectId);
-      setEnrolled(count ?? 0);
+      setEnrolled(await getProjectEnrolmentCount(projectId));
     } catch (err) {
       setError(err.message || 'Failed to load project.');
     } finally {
@@ -63,15 +62,8 @@ export default function CreatorProjectDetailScreen({ navigation, route }) {
     if (!project) return;
     setDeleting(true);
     try {
-      // Get creatorId
-      const { data: creatorRow } = await supabase
-        .from('creators').select('id').eq('user_id', user.id).maybeSingle();
-      if (!creatorRow) throw new Error('Creator profile not found.');
-      await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId)
-        .eq('creator_id', creatorRow.id);
+      const creatorRow = await getCreatorRowByUserId(user.id);
+      await deleteProject(projectId, creatorRow.id);
       setDelModal(false);
       navigation.goBack();
     } catch (err) {
@@ -94,7 +86,7 @@ export default function CreatorProjectDetailScreen({ navigation, route }) {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: insets.bottom + 90 }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACING.lg, paddingBottom: TAB_BAR_TOTAL_HEIGHT + insets.bottom }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -107,7 +99,7 @@ export default function CreatorProjectDetailScreen({ navigation, route }) {
           </Text>
           <TouchableOpacity
             style={styles.iconBtn}
-            onPress={() => navigation.navigate('EditProject', { projectId })}
+            onPress={() => navigation.navigate(SCREENS.EDIT_PROJECT, { projectId })}
           >
             <Ionicons name="create-outline" size={20} color={COLORS.aiCyan} />
           </TouchableOpacity>
